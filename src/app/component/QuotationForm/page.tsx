@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { db } from '@/lib/firebase';
 import {
   collection,
@@ -12,28 +12,45 @@ import {
 } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
+interface QuotationItem {
+  qty: string;
+  description: string;
+  unitPrice: string;
+  total: string;
+}
+
+interface FormDataType {
+  name: string;
+  position: string;
+  address: string;
+  through: string;
+  subject: string;
+  description: string;
+  items: QuotationItem[];
+  totalPrice: string;
+  vat: string;
+  grandTotal: string;
+  date: string;
+}
 
 export default function QuotationForm() {
   const router = useRouter();
   const [refNo, setRefNo] = useState('');
-  const [useItems, setUseItems] = useState(true); // New state to toggle items section
-  const [formData, setFormData] = useState({
+  const [useItems, setUseItems] = useState(true);
+  const [formData, setFormData] = useState<FormDataType>({
     name: '',
     position: '',
     address: '',
     through: '',
     subject: '',
     description: '',
-    items: [
-      { qty: '', description: '', unitPrice: '', total: '' },
-    ],
+    items: [{ qty: '', description: '', unitPrice: '', total: '' }],
     totalPrice: '',
     vat: '',
     grandTotal: '',
     date: '',
   });
 
-  // Auto-generate reference number based on current year+month
   useEffect(() => {
     const generateRefNo = async () => {
       const now = new Date();
@@ -50,17 +67,16 @@ export default function QuotationForm() {
       const newRefNo = `Q-${yyyymm}-${String(count).padStart(3, '0')}`;
       setRefNo(newRefNo);
 
-      const dateString = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
       setFormData((prev) => ({
         ...prev,
-        date: dateString,
+        date: now.toLocaleDateString('en-CA'),
       }));
     };
 
     generateRefNo();
   }, []);
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -68,91 +84,40 @@ export default function QuotationForm() {
     }));
   };
 
-  interface QuotationItem {
-  qty: string;
-  description: string;
-  unitPrice: string;
-  total: string;
-}
+  const handleItemChange = (index: number, field: keyof QuotationItem, value: string) => {
+    if (index < 0 || index >= formData.items.length) return;
 
-interface FormData {
-  // ... your other form fields
-  items: QuotationItem[];
-  totalPrice: string;
-  vat: string;
-  grandTotal: string;
-}
+    const updatedItems = formData.items.map((item, i) => {
+      if (i !== index) return item;
 
-const handleItemChange = (index: number, field: keyof QuotationItem, value: string) => {
-  // Validate index range
-  if (index < 0 || index >= formData.items.length) {
-    console.error('Invalid item index');
-    return;
-  }
+      const updatedItem = { ...item, [field]: value };
 
-  // Create a deep copy of items array and update the specific field
-  const updatedItems = formData.items.map((item, i) => {
-    if (i !== index) return item;
-    
-    const updatedItem = { ...item, [field]: value };
-    
-    // Auto-calculate total if qty or unitPrice changes
-    if (field === 'qty' || field === 'unitPrice') {
-      const qty = parseFloat(updatedItem.qty) || 0;
-      const unitPrice = parseFloat(updatedItem.unitPrice) || 0;
-      updatedItem.total = (qty * unitPrice).toFixed(2);
-    }
-    
-    return updatedItem;
-  });
+      if (field === 'qty' || field === 'unitPrice') {
+        const qty = parseFloat(updatedItem.qty) || 0;
+        const unitPrice = parseFloat(updatedItem.unitPrice) || 0;
+        updatedItem.total = (qty * unitPrice).toFixed(2);
+      }
 
-  // Calculate totals with proper error handling
-  const totalPrice = updatedItems.reduce((sum, item) => {
-    const itemTotal = parseFloat(item.total) || 0;
-    return sum + itemTotal;
-  }, 0);
+      return updatedItem;
+    });
 
-  const vat = parseFloat((totalPrice * 0.12).toFixed(2));
-  const grandTotal = parseFloat((totalPrice + vat).toFixed(2));
-
-  // Update form state
-  setFormData(prev => ({
-    ...prev,
-    items: updatedItems,
-    totalPrice: totalPrice.toFixed(2),
-    vat: vat.toFixed(2),
-    grandTotal: grandTotal.toFixed(2)
-  }));
-};
-
-  const handleAddItem = () => {
-    setFormData((prev) => ({
-      ...prev,
-      items: [...prev.items, { qty: '', description: '', unitPrice: '', total: '' }],
-    }));
-  };
-
-  const handleRemoveItem = (index: number) => {
-    const newItems = [...formData.items];
-    newItems.splice(index, 1);
-    
-    const totalPrice = newItems.reduce((sum, item) => sum + parseFloat(item.total || '0'), 0);
+    const totalPrice = updatedItems.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
     const vat = totalPrice * 0.12;
     const grandTotal = totalPrice + vat;
 
     setFormData((prev) => ({
       ...prev,
-      items: newItems,
+      items: updatedItems,
       totalPrice: totalPrice.toFixed(2),
       vat: vat.toFixed(2),
       grandTotal: grandTotal.toFixed(2),
     }));
   };
 
-  const handleTotalChange = (e: any) => {
+  const handleTotalChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const numValue = parseFloat(value) || 0;
-    
+
     if (name === 'totalPrice') {
       const vat = numValue * 0.12;
       const grandTotal = numValue + vat;
@@ -181,40 +146,18 @@ const handleItemChange = (index: number, field: keyof QuotationItem, value: stri
     }
   };
 
-  const toggleItemsSection = () => {
-    setUseItems(!useItems);
-    if (!useItems) {
-      // When enabling items section, reset totals based on items
-      const totalPrice = formData.items.reduce((sum, item) => sum + parseFloat(item.total || '0'), 0);
-      const vat = totalPrice * 0.12;
-      const grandTotal = totalPrice + vat;
-      
-      setFormData(prev => ({
-        ...prev,
-        totalPrice: totalPrice.toFixed(2),
-        vat: vat.toFixed(2),
-        grandTotal: grandTotal.toFixed(2),
-      }));
-    }
-  };
-
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const submissionData = {
       ...formData,
       refNo,
       createdAt: Timestamp.now(),
-      // If not using items, send empty array
       items: useItems ? formData.items : [],
     };
-    
+
     await addDoc(collection(db, 'quotations'), submissionData);
     alert('Quotation saved!');
     router.push('/component/quotation-list');
-
-    
-    
-
   };
 
   return (

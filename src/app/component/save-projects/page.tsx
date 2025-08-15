@@ -1,21 +1,29 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, DocumentData } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 
+interface Project {
+  id: string;
+  refNo?: string;
+  projectName?: string;
+  clientName?: string;
+  [key: string]: unknown; // allows extra Firestore fields
+}
+
 export default function SaveProjectsPage() {
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
 
   useEffect(() => {
     const fetchProjects = async () => {
       const snapshot = await getDocs(collection(db, 'projects'));
-      const projectList = snapshot.docs.map(doc => ({
+      const projectList: Project[] = snapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...(doc.data() as DocumentData)
       }));
       setProjects(projectList);
     };
@@ -26,7 +34,6 @@ export default function SaveProjectsPage() {
     router.push(`/preview?projectId=${projectId}`);
   };
 
-  // Filter projects based on search term
   const filteredProjects = projects.filter(project =>
     project.refNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     project.projectName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -81,7 +88,6 @@ export default function SaveProjectsPage() {
 
         {/* Projects Table */}
         <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl shadow-slate-200/50 overflow-hidden border border-white/50">
-          {/* Table Header */}
           <div className="bg-gradient-to-r from-slate-800 to-slate-700 text-white">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 font-semibold text-lg">
               <div className="flex items-center space-x-2">
@@ -111,10 +117,9 @@ export default function SaveProjectsPage() {
             </div>
           </div>
 
-          {/* Table Body */}
           <div className="divide-y divide-slate-100">
             {filteredProjects.length > 0 ? (
-              filteredProjects.map((project, index) => (
+              filteredProjects.map(project => (
                 <div 
                   key={project.id} 
                   className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/50 transition-all duration-300 group"

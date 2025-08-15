@@ -1,22 +1,34 @@
 'use client';
 
+'use client';
+
 import { useEffect, useState } from 'react';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { collection, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { collection, getDocs, updateDoc, deleteDoc, doc, DocumentData } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 
+// Define a type for your users
+interface AppUser {
+  id: string;
+  name?: string;
+  email?: string;
+  status?: 'approved' | 'declined' | 'pending' | string;
+  role?: 'Admin' | 'User' | string;
+}
+
 export default function ManageUsersPage() {
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<AppUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+
   const auth = getAuth();
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user: FirebaseUser | null) => {
       if (!user) {
         router.push('/login');
         return;
@@ -29,16 +41,16 @@ export default function ManageUsersPage() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [auth, router]); // Added missing dependencies
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
       const querySnapshot = await getDocs(collection(db, 'users'));
-      const usersList: any[] = [];
-      querySnapshot.forEach((docSnap) => {
-        usersList.push({ id: docSnap.id, ...docSnap.data() });
-      });
+      const usersList: AppUser[] = querySnapshot.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...(docSnap.data() as DocumentData),
+      }));
       setUsers(usersList);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -85,9 +97,10 @@ export default function ManageUsersPage() {
     }
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email?.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
+      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === 'all' || user.status === filterStatus;
     return matchesSearch && matchesFilter;
   });

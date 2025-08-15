@@ -3,8 +3,24 @@
 import { useRef } from 'react';
 import PrintableQuotation from '@/app/component/PrintableQuotation';
 
+type QuotationItem = {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+};
+
+type Quotation = {
+  refNo: string;
+  date: string;
+  customerName: string;
+  items: QuotationItem[];
+  totalAmount: number;
+  [key: string]: string | number | QuotationItem[]; // for optional extra fields
+};
+
 type Props = {
-  quotation: any;
+  quotation: Quotation;
   onBack?: () => void;
 };
 
@@ -13,7 +29,7 @@ export default function QuotationPreview({ quotation, onBack }: Props) {
 
   const handlePrint = () => {
     if (!printRef.current) return;
-    
+
     const printWindow = window.open('', '_blank');
     if (printWindow) {
       printWindow.document.write(`
@@ -49,14 +65,12 @@ export default function QuotationPreview({ quotation, onBack }: Props) {
                 width: 200px; 
                 text-align: center; 
               }
-              /* Header section */
               .header-container {
                 display: flex;
                 justify-content: space-between;
                 align-items: flex-start;
                 margin-bottom: 20px;
               }
-              /* Logo section */
               .logo-section {
                 width: 100px;
               }
@@ -64,7 +78,6 @@ export default function QuotationPreview({ quotation, onBack }: Props) {
                 width: 200px;
                 height: auto;
               }
-              /* Reference section */
               .ref-section {
                 text-align: right;
               }
@@ -80,21 +93,16 @@ export default function QuotationPreview({ quotation, onBack }: Props) {
             </style>
           </head>
           <body>
-           
-            
-
-
             ${printRef.current.innerHTML}
           </body>
         </html>
       `);
-      
+
       printWindow.document.close();
       setTimeout(() => {
         printWindow.print();
       }, 200);
     } else {
-      // Fallback if popup is blocked
       window.print();
     }
   };
@@ -103,11 +111,17 @@ export default function QuotationPreview({ quotation, onBack }: Props) {
     <div>
       <div className="mb-4 flex justify-between">
         {onBack && (
-          <button onClick={onBack} className="bg-gray-500 text-white px-4 py-2 rounded">
+          <button
+            onClick={onBack}
+            className="bg-gray-500 text-white px-4 py-2 rounded"
+          >
             ← Back
           </button>
         )}
-        <button onClick={handlePrint} className="bg-blue-600 text-white px-4 py-2 rounded">
+        <button
+          onClick={handlePrint}
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+        >
           🖨 Print
         </button>
       </div>

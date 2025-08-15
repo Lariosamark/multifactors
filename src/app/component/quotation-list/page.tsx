@@ -1,7 +1,6 @@
 'use client';
 
-import React from 'react';
-import { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { collection, getDocs } from 'firebase/firestore';
@@ -15,7 +14,7 @@ type Quotation = {
   date?: string;
   grandTotal?: number;
   isRevision: boolean;
-  [key: string]: any; // For any additional fields
+  [key: string]: string | number | boolean | undefined;
 };
 
 type GroupedQuotation = {
@@ -23,21 +22,19 @@ type GroupedQuotation = {
   revisions: Quotation[];
 };
 
+type RevisionWithOriginal = Quotation & {
+  originalName: string;
+  originalRef: string;
+};
+
 export default function QuotationListPage() {
   const [groupedQuotations, setGroupedQuotations] = useState<GroupedQuotation[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedQuotation, setSelectedQuotation] = useState<Quotation | null>(null);
-  const [comparisonData, setComparisonData] = useState<{
-    original: Quotation | null;
-    revisions: Quotation[];
-    showComparison: boolean;
-  }>({ original: null, revisions: [], showComparison: false });
-  const printRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const router = useRouter();
 
   useEffect(() => {
     const fetchAllQuotations = async () => {
-      // Fetch originals
       const originalsSnap = await getDocs(collection(db, 'quotations'));
       const originals: Quotation[] = originalsSnap.docs.map((doc) => ({
         id: doc.id,
@@ -45,7 +42,6 @@ export default function QuotationListPage() {
         isRevision: false,
       }));
 
-      // Fetch revisions
       const revisionsSnap = await getDocs(collection(db, 'quotationRevisions'));
       const revisions: Quotation[] = revisionsSnap.docs.map((doc) => ({
         id: doc.id,
@@ -53,39 +49,37 @@ export default function QuotationListPage() {
         isRevision: true,
       }));
 
-      // Group revisions under their original quotation by base refNo
-  const groupMap: Record<string, any> = {};
+      const groupMap: Record<string, GroupedQuotation> = {};
 
-// Group originals by their reference number
-originals.forEach((q) => {
-  const ref = q.refNo || q.refNumber;
-  if (typeof ref !== 'string' || !ref.trim()) return; // Skip if no valid reference number
-  if (!groupMap[ref]) {
-    groupMap[ref] = { original: q, revisions: [] };
-  } else {
-    groupMap[ref].original = q;
-  }
-});
+      originals.forEach((q) => {
+        const ref = q.refNo || q.refNumber;
+        if (typeof ref !== 'string' || !ref.trim()) return;
+        if (!groupMap[ref]) {
+          groupMap[ref] = { original: q, revisions: [] };
+        } else {
+          groupMap[ref].original = q;
+        }
+      });
 
-// Group revisions under their original quotation by base refNo
-revisions.forEach((r) => {
-  const revRef = r.refNo || r.refNumber;
-  if (typeof revRef !== 'string' || !revRef.trim()) return; // Skip if no valid reference number
-  const baseRef = revRef.startsWith('QR-') ? revRef.replace('QR-', 'Q-') : revRef;
-  if (!baseRef.trim()) return; // Skip if baseRef is empty
-  if (groupMap[baseRef]) {
-    groupMap[baseRef].revisions.push(r);
-  } else {
-    groupMap[baseRef] = { original: null, revisions: [r] };
-  }
-});
-      Object.values(groupMap).forEach((group: any) => {
-        group.revisions.sort((a: any, b: any) =>
+      revisions.forEach((r) => {
+        const revRef = r.refNo || r.refNumber;
+        if (typeof revRef !== 'string' || !revRef.trim()) return;
+        const baseRef = revRef.startsWith('QR-') ? revRef.replace('QR-', 'Q-') : revRef;
+        if (!baseRef.trim()) return;
+        if (groupMap[baseRef]) {
+          groupMap[baseRef].revisions.push(r);
+        } else {
+          groupMap[baseRef] = { original: null, revisions: [r] };
+        }
+      });
+
+      Object.values(groupMap).forEach((group) => {
+        group.revisions.sort((a, b) =>
           (a.date || '') > (b.date || '') ? 1 : -1
         );
       });
 
-      const groupedArr = Object.values(groupMap).sort((a: any, b: any) =>
+      const groupedArr = Object.values(groupMap).sort((a, b) =>
         (b.original?.date || '') > (a.original?.date || '') ? 1 : -1
       );
       setGroupedQuotations(groupedArr);
@@ -93,7 +87,6 @@ revisions.forEach((r) => {
     fetchAllQuotations();
   }, []);
 
-  // Filter by search term
   const filteredGroups = groupedQuotations.filter((group) => {
     const original = group.original;
     if (!original) return false;
@@ -103,9 +96,8 @@ revisions.forEach((r) => {
     return nameMatch || refMatch;
   });
 
-  // Extract all revisions for the revision table
-  const allRevisions = groupedQuotations.flatMap((group) =>
-    group.revisions.map((rev: any) => ({
+  const allRevisions: RevisionWithOriginal[] = groupedQuotations.flatMap((group) =>
+    group.revisions.map((rev) => ({
       ...rev,
       originalName: group.original?.name || '',
       originalRef: group.original?.refNo || group.original?.refNumber || '',

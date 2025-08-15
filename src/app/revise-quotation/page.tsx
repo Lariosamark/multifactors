@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { db } from '@/lib/firebase';
 import {
   collection,
@@ -14,23 +14,43 @@ import {
 } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+interface QuotationItem {
+  qty: string;
+  description: string;
+  unitPrice: string;
+  total: string;
+}
+
+interface QuotationData {
+  name?: string;
+  position?: string;
+  address?: string;
+  through?: string;
+  subject?: string;
+  description?: string;
+  items?: QuotationItem[];
+  totalPrice?: string;
+  vat?: string;
+  grandTotal?: string;
+  date?: string;
+  refNo?: string;
+}
+
 export default function RevisionQuotationForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const quotationId = searchParams.get('id');
+
   const [originalRefNo, setOriginalRefNo] = useState('');
   const [revisionRefNo, setRevisionRefNo] = useState('');
-  const [originalData, setOriginalData] = useState<any>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<QuotationData>({
     name: '',
     position: '',
     address: '',
     through: '',
     subject: '',
     description: '',
-    items: [
-      { qty: '', description: '', unitPrice: '', total: '' },
-    ],
+    items: [{ qty: '', description: '', unitPrice: '', total: '' }],
     totalPrice: '',
     vat: '',
     grandTotal: '',
@@ -38,73 +58,62 @@ export default function RevisionQuotationForm() {
   });
 
   // Fetch original quotation and generate revision refNo
- useEffect(() => {
-  const fetchOriginal = async () => {
-    if (!quotationId) return;
-    const docRef = doc(db, 'quotations', quotationId);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      setOriginalData(data);
-      const refNo = data.refNo || data.refNumber || '';
-      setOriginalRefNo(refNo);
+  useEffect(() => {
+    const fetchOriginal = async () => {
+      if (!quotationId) return;
+      const docRef = doc(db, 'quotations', quotationId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data() as QuotationData;
+        const refNo = data.refNo || '';
+        setOriginalRefNo(refNo);
 
-      if (refNo) {
-        // Generate revision refNo: QR-YYYYMM-XXX-RN (N = next revision number)
-        const baseRef = refNo.replace('Q-', 'QR-');
-        const qRev = query(
-          collection(db, 'quotationRevisions'),
-          where('refNumber', '>=', `${baseRef}`),
-          where('refNumber', '<', `${baseRef}Z`)
-        );
-        const snapshot = await getDocs(qRev);
-        const nextRevNum = snapshot.size + 1;
-        setRevisionRefNo(`${baseRef}-R${nextRevNum}`);
+        if (refNo) {
+          const baseRef = refNo.replace('Q-', 'QR-');
+          const qRev = query(
+            collection(db, 'quotationRevisions'),
+            where('refNumber', '>=', `${baseRef}`),
+            where('refNumber', '<', `${baseRef}Z`)
+          );
+          const snapshot = await getDocs(qRev);
+          const nextRevNum = snapshot.size + 1;
+          setRevisionRefNo(`${baseRef}-R${nextRevNum}`);
+        } else {
+          setRevisionRefNo('');
+        }
+
+        setFormData({
+          ...formData,
+          name: data.name || '',
+          position: data.position || '',
+          address: data.address || '',
+          through: data.through || '',
+          subject: data.subject || '',
+          description: data.description || '',
+          items: data.items || [{ qty: '', description: '', unitPrice: '', total: '' }],
+          totalPrice: data.totalPrice || '',
+          vat: data.vat || '',
+          grandTotal: data.grandTotal || '',
+          date: new Date().toLocaleDateString('en-CA'),
+        });
       } else {
-        setRevisionRefNo(''); // fallback if no refNo
+        setOriginalRefNo('');
+        setRevisionRefNo('');
       }
+    };
+    fetchOriginal();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quotationId]);
 
-      // Optionally prefill form with original data
-      setFormData((prev) => ({
-        ...prev,
-        name: data.name || '',
-        position: data.position || '',
-        address: data.address || '',
-        through: data.through || '',
-        subject: data.subject || '',
-        description: data.description || '',
-        items: data.items || [{ qty: '', description: '', unitPrice: '', total: '' }],
-        totalPrice: data.totalPrice || '',
-        vat: data.vat || '',
-        grandTotal: data.grandTotal || '',
-        date: new Date().toLocaleDateString('en-CA'),
-      }));
-    } else {
-      setOriginalRefNo('');
-      setRevisionRefNo('');
-    }
-  };
-  fetchOriginal();
-}, [quotationId]);
-
-  const handleChange = (e: any) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
-
-  interface QuotationItem {
-    qty: string;
-    description: string;
-    unitPrice: string;
-    total: string;
-  }
 
   const handleItemChange = (index: number, field: keyof QuotationItem, value: string) => {
-    if (index < 0 || index >= formData.items.length) return;
-    const updatedItems = formData.items.map((item, i) => {
+    if (index < 0 || index >= formData.items!.length) return;
+
+    const updatedItems = formData.items!.map((item, i) => {
       if (i !== index) return item;
       const updatedItem = { ...item, [field]: value };
       if (field === 'qty' || field === 'unitPrice') {
@@ -114,31 +123,35 @@ export default function RevisionQuotationForm() {
       }
       return updatedItem;
     });
+
     const totalPrice = updatedItems.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
     const vat = parseFloat((totalPrice * 0.12).toFixed(2));
     const grandTotal = parseFloat((totalPrice + vat).toFixed(2));
-    setFormData(prev => ({
+
+    setFormData((prev) => ({
       ...prev,
       items: updatedItems,
       totalPrice: totalPrice.toFixed(2),
       vat: vat.toFixed(2),
-      grandTotal: grandTotal.toFixed(2)
+      grandTotal: grandTotal.toFixed(2),
     }));
   };
 
   const handleAddItem = () => {
     setFormData((prev) => ({
       ...prev,
-      items: [...prev.items, { qty: '', description: '', unitPrice: '', total: '' }],
+      items: [...prev.items!, { qty: '', description: '', unitPrice: '', total: '' }],
     }));
   };
 
   const handleRemoveItem = (index: number) => {
-    const newItems = [...formData.items];
+    const newItems = [...formData.items!];
     newItems.splice(index, 1);
+
     const totalPrice = newItems.reduce((sum, item) => sum + parseFloat(item.total || '0'), 0);
     const vat = totalPrice * 0.12;
     const grandTotal = totalPrice + vat;
+
     setFormData((prev) => ({
       ...prev,
       items: newItems,
@@ -148,47 +161,34 @@ export default function RevisionQuotationForm() {
     }));
   };
 
-  const handleTotalChange = (e: any) => {
+  const handleTotalChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const numValue = parseFloat(value) || 0;
+
     if (name === 'totalPrice') {
       const vat = numValue * 0.12;
       const grandTotal = numValue + vat;
-      setFormData((prev) => ({
-        ...prev,
-        totalPrice: value,
-        vat: vat.toFixed(2),
-        grandTotal: grandTotal.toFixed(2),
-      }));
+      setFormData((prev) => ({ ...prev, totalPrice: value, vat: vat.toFixed(2), grandTotal: grandTotal.toFixed(2) }));
     } else if (name === 'vat') {
-      const totalPrice = parseFloat(formData.totalPrice) || 0;
+      const totalPrice = parseFloat(formData.totalPrice || '0');
       const grandTotal = totalPrice + numValue;
-      setFormData((prev) => ({
-        ...prev,
-        vat: value,
-        grandTotal: grandTotal.toFixed(2),
-      }));
+      setFormData((prev) => ({ ...prev, vat: value, grandTotal: grandTotal.toFixed(2) }));
     } else if (name === 'grandTotal') {
-      const totalPrice = parseFloat(formData.totalPrice) || 0;
+      const totalPrice = parseFloat(formData.totalPrice || '0');
       const vat = numValue - totalPrice;
-      setFormData((prev) => ({
-        ...prev,
-        vat: vat.toFixed(2),
-        grandTotal: value,
-      }));
+      setFormData((prev) => ({ ...prev, vat: vat.toFixed(2), grandTotal: value }));
     }
   };
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const submissionData = {
+    await addDoc(collection(db, 'quotationRevisions'), {
       ...formData,
       refNumber: revisionRefNo,
       originalRefNo,
       originalQuotationId: quotationId,
       createdAt: Timestamp.now(),
-    };
-    await addDoc(collection(db, 'quotationRevisions'), submissionData);
+    });
     alert('Revision Quotation saved!');
     router.push('/quotation-list');
   };
@@ -200,6 +200,7 @@ export default function RevisionQuotationForm() {
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4 md:p-8">

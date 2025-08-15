@@ -11,8 +11,17 @@ import {
   limit,
 } from 'firebase/firestore';
 
+// Define quotation type
+interface Quotation {
+  id: string;
+  refNo?: string;
+  date?: string;
+  name?: string;
+  grandTotal?: number;
+}
+
 // Simple placeholder icon components (SVG inline)
-const IconPlaceholder = ({ size = 24 }) => (
+const IconPlaceholder = ({ size = 24 }: { size?: number }) => (
   <div
     style={{
       width: size,
@@ -27,7 +36,7 @@ export default function AdminDashboard() {
   const [totalQuotations, setTotalQuotations] = useState(0);
   const [pendingApprovals, setPendingApprovals] = useState(0);
   const [userCount, setUserCount] = useState(0);
-  const [recentQuotations, setRecentQuotations] = useState<any[]>([]);
+  const [recentQuotations, setRecentQuotations] = useState<Quotation[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -54,10 +63,10 @@ export default function AdminDashboard() {
           limit(5)
         );
         const recentSnapshot = await getDocs(recentQuery);
-        const recentList = recentSnapshot.docs.map(doc => ({
+        const recentList: Quotation[] = recentSnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
-        }));
+        })) as Quotation[];
         setRecentQuotations(recentList);
 
       } catch (error) {
@@ -81,7 +90,17 @@ export default function AdminDashboard() {
     );
   }
 
-  const StatCard = ({ title, value, color, trend }) => (
+  const StatCard = ({
+    title,
+    value,
+    color,
+    trend,
+  }: {
+    title: string;
+    value: string | number;
+    color: string;
+    trend?: string;
+  }) => (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow duration-200">
       <div className="flex items-center justify-between">
         <div>
@@ -115,7 +134,9 @@ export default function AdminDashboard() {
         <header className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-slate-200 px-6 py-4 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Dashboard Overview</h1>
-            <p className="text-slate-600 mt-1">Welcome back! Here's what's happening today.</p>
+            <p className="text-slate-600 mt-1">
+              Welcome back! Here&apos;s what&apos;s happening today.
+            </p>
           </div>
         </header>
 

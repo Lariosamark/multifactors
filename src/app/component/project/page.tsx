@@ -84,7 +84,7 @@ export default function ProjectPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    let finalClientName = formData.clientName || customClient;
+    const finalClientName = formData.clientName || customClient;
 
     try {
       // If new client entered, save to customers list

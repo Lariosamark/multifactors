@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import {
@@ -12,6 +12,28 @@ import {
   where,
 } from 'firebase/firestore';
 
+// Define item and form types
+interface Item {
+  qty: string;
+  description: string;
+  unitPrice: string;
+  total: string;
+}
+
+interface FormData {
+  name: string;
+  position: string;
+  address: string;
+  through: string;
+  subject: string;
+  description: string;
+  items: Item[];
+  totalPrice: string;
+  vat: string;
+  grandTotal: string;
+  date: string;
+}
+
 export default function QuotationPage() {
   const searchParams = useSearchParams();
   const projectId = searchParams.get('projectId');
@@ -21,7 +43,7 @@ export default function QuotationPage() {
   const [refNo, setRefNo] = useState(refNoFromParams || '');
   const [isRefNoEditable, setIsRefNoEditable] = useState(false);
   const [useItems, setUseItems] = useState(true);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     position: '',
     address: '',
@@ -37,8 +59,6 @@ export default function QuotationPage() {
 
   // Auto-generate refNo if not provided in params
   useEffect(() => {
-
-    
     const now = new Date();
     const today = now.toLocaleDateString('en-CA');
 
@@ -49,9 +69,7 @@ export default function QuotationPage() {
     }
 
     const generateRefNo = async () => {
-      const yyyymm = `${now.getFullYear()}${String(
-        now.getMonth() + 1
-      ).padStart(2, '0')}`;
+      const yyyymm = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
       const qRef = query(
         collection(db, 'quotations'),
         where('refNo', '>=', `${yyyymm}-000`),
@@ -67,12 +85,12 @@ export default function QuotationPage() {
     generateRefNo();
   }, [refNoFromParams]);
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleRefNoChange = (e: any) => {
+  const handleRefNoChange = (e: ChangeEvent<HTMLInputElement>) => {
     setRefNo(e.target.value);
   };
 
@@ -80,7 +98,7 @@ export default function QuotationPage() {
     setIsRefNoEditable(!isRefNoEditable);
   };
 
-  const handleItemChange = (index: number, field: string, value: string) => {
+  const handleItemChange = (index: number, field: keyof Item, value: string) => {
     const updatedItems = [...formData.items];
     updatedItems[index][field] = value;
     if (field === 'qty' || field === 'unitPrice') {
@@ -88,10 +106,7 @@ export default function QuotationPage() {
       const price = parseFloat(updatedItems[index].unitPrice) || 0;
       updatedItems[index].total = (qty * price).toFixed(2);
     }
-    const totalPrice = updatedItems.reduce(
-      (sum, item) => sum + (parseFloat(item.total) || 0),
-      0
-    );
+    const totalPrice = updatedItems.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
     const vat = totalPrice * 0.12;
     const grandTotal = totalPrice + vat;
     setFormData((prev) => ({
@@ -112,10 +127,7 @@ export default function QuotationPage() {
 
   const handleRemoveItem = (index: number) => {
     const updated = formData.items.filter((_, i) => i !== index);
-    const totalPrice = updated.reduce(
-      (sum, item) => sum + (parseFloat(item.total) || 0),
-      0
-    );
+    const totalPrice = updated.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
     const vat = totalPrice * 0.12;
     const grandTotal = totalPrice + vat;
     setFormData((prev) => ({
@@ -127,7 +139,7 @@ export default function QuotationPage() {
     }));
   };
 
-  const handleTotalChange = (e: any) => {
+  const handleTotalChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const num = parseFloat(value) || 0;
     if (name === 'totalPrice') {
@@ -145,7 +157,7 @@ export default function QuotationPage() {
     setUseItems(!useItems);
   };
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     await addDoc(collection(db, 'quotations'), {
       ...formData,

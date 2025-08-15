@@ -16,9 +16,11 @@ import {
   getDoc,
   setDoc,
   serverTimestamp,
+  Timestamp,
 } from "firebase/firestore";
 
 type Role = "admin" | "employee";
+
 type Profile = {
   uid: string;
   email: string;
@@ -26,7 +28,7 @@ type Profile = {
   photoURL?: string;
   role: Role;
   approved: boolean; // employees require approval
-  createdAt?: any;
+  createdAt?: Timestamp; // <-- fixed type
 };
 
 type AuthState = {
@@ -56,7 +58,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Pre-approved admins collection: /admins/<email>
     const adminCheckRef = doc(collection(db, "admins"), u.email);
     const adminSnap = await getDoc(adminCheckRef);
     const isAdmin = adminSnap.exists();
@@ -67,8 +68,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       displayName: u.displayName || u.email,
       photoURL: u.photoURL || undefined,
       role: isAdmin ? "admin" : "employee",
-      approved: isAdmin ? true : false, // employees start unapproved
-      createdAt: serverTimestamp(),
+      approved: isAdmin ? true : false,
+      createdAt: serverTimestamp(), // <-- still works
     };
 
     await setDoc(userRef, newProfile, { merge: true });
@@ -76,7 +77,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // Handle redirect login result
     const handleRedirectResult = async () => {
       const result = await getRedirectResult(auth);
       if (result?.user) {
@@ -98,10 +98,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginWithGoogle = async () => {
     if (process.env.NODE_ENV === "production") {
-      // Use redirect for production to avoid popup closing issues
       await signInWithRedirect(auth, googleProvider);
     } else {
-      // Use popup for dev convenience
       await signInWithPopup(auth, googleProvider);
     }
   };
