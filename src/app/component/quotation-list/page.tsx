@@ -234,7 +234,8 @@ export default function QuotationListPage() {
                       </tr>
                     )}
                     {/* Revisions */}
-                    {group.revisions.map((rev: any) => (
+                    {group.revisions.map((rev: Revision) => (
+
                       <tr key={rev.id} className="bg-purple-50 hover:bg-purple-100/60 transition-colors duration-150">
                         <td className="px-10 py-4 border-l-4 border-purple-400">
                           <div className="flex items-center gap-3">

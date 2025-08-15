@@ -36,7 +36,7 @@ interface FormDataType {
 export default function QuotationForm() {
   const router = useRouter();
   const [refNo, setRefNo] = useState('');
-  const [useItems, setUseItems] = useState(true);
+  const [useItems] = useState(true);
   const [formData, setFormData] = useState<FormDataType>({
     name: '',
     position: '',
