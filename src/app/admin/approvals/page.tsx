@@ -292,13 +292,15 @@ export default function ManageUsersPage() {
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
                           user.role === 'Admin' ? 'bg-violet-500/20 text-violet-400' : 'bg-blue-500/20 text-blue-400'
                         }`}>
-                          {getRoleIcon(user.role)}
+                          {getRoleIcon(user.role || 'User')}
                         </div>
                         <span className="text-white font-medium">{user.role || 'User'}</span>
                       </div>
                     </td>
                     <td className="p-6">
-                      <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold border ${getStatusColor(user.status)}`}>
+                      <span
+  className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold border ${getStatusColor(user.status || 'Pending')}`}
+>
                         <div className={`w-2 h-2 rounded-full ${
                           user.status === 'approved' ? 'bg-emerald-400' :
                           user.status === 'declined' ? 'bg-red-400' :
