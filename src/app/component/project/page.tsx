@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { db } from '@/lib/firebase';
 import {
   collection,
@@ -14,9 +14,23 @@ import {
 } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
+interface Customer {
+  id: string;
+  name: string;
+  [key: string]: any;
+}
+
+interface FormData {
+  projectName: string;
+  clientName: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+}
+
 export default function ProjectPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     projectName: '',
     clientName: '',
     description: '',
@@ -24,14 +38,14 @@ export default function ProjectPage() {
     endDate: '',
   });
   const [refNo, setRefNo] = useState('');
-  const [customers, setCustomers] = useState([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [customClient, setCustomClient] = useState('');
 
   // Fetch customers list
   useEffect(() => {
     const fetchCustomers = async () => {
       const snapshot = await getDocs(collection(db, 'customers'));
-      setCustomers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setCustomers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer)));
     };
     fetchCustomers();
   }, []);
@@ -53,7 +67,7 @@ export default function ProjectPage() {
       const querySnap = await getDocs(q);
       let nextNumber = 1;
       if (!querySnap.empty) {
-        const lastRef = querySnap.docs[0].data().refNo;
+        const lastRef = querySnap.docs[0].data().refNo as string;
         const lastNum = parseInt(lastRef.split('-')[2], 10);
         nextNumber = lastNum + 1;
       }
@@ -65,12 +79,12 @@ export default function ProjectPage() {
   }, []);
 
   // Handle field changes
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   // Handle client selection
-  const handleClientChange = (e) => {
+  const handleClientChange = (e: ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     if (value === 'other') {
       setFormData({ ...formData, clientName: '' });
@@ -81,7 +95,7 @@ export default function ProjectPage() {
   };
 
   // Handle form submit
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const finalClientName = formData.clientName || customClient;
@@ -157,7 +171,6 @@ export default function ProjectPage() {
             Project Details
           </h3>
           <div className="space-y-4">
-            {/* Project Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700">Project Name</label>
               <input type="text" name="projectName" value={formData.projectName} onChange={handleChange} placeholder="Enter project name" className="w-full px-4 py-3 border rounded-lg" required />
@@ -179,7 +192,6 @@ export default function ProjectPage() {
               )}
             </div>
 
-            {/* Description */}
             <div>
               <label className="block text-sm font-medium text-gray-700">Project Description</label>
               <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Describe the project" rows={4} className="w-full px-4 py-3 border rounded-lg" required />

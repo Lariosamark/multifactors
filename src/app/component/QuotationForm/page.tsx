@@ -34,9 +34,10 @@ interface FormDataType {
 }
 
 export default function QuotationForm() {
+  const [useItems, setUseItems] = useState<boolean>(false);
   const router = useRouter();
   const [refNo, setRefNo] = useState('');
-  const [useItems] = useState(true);
+  
   const [formData, setFormData] = useState<FormDataType>({
     name: '',
     position: '',
@@ -83,6 +84,7 @@ export default function QuotationForm() {
       [name]: value,
     }));
   };
+  
 
   const handleItemChange = (index: number, field: keyof QuotationItem, value: string) => {
     if (index < 0 || index >= formData.items.length) return;
@@ -158,7 +160,15 @@ export default function QuotationForm() {
     await addDoc(collection(db, 'quotations'), submissionData);
     alert('Quotation saved!');
     router.push('/component/quotation-list');
+    
   };
+
+    const handleRemoveItem = (index: number) => {
+  // your removal logic here
+};
+    const handleAddItem = () => {
+  };
+
 
   return (
     
@@ -327,12 +337,13 @@ export default function QuotationForm() {
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
-                      type="checkbox"
-                      id="useItems"
-                      checked={useItems}
-                      onChange={toggleItemsSection}
-                      className="sr-only peer"
-                    />
+  type="checkbox"
+  id="useItems"
+  checked={useItems}
+  onChange={(e) => setUseItems(e.target.checked)}
+  className="sr-only peer"
+/>
+
                     <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                     <span className="ml-3 text-sm font-medium text-gray-700">Include Items Section</span>
                   </label>

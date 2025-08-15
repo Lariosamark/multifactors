@@ -4,17 +4,20 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { collection, getDocs } from 'firebase/firestore';
-import QuotationPreview from '@/app/component/QuotationPreview';
+
 
 type Quotation = {
   id: string;
+  customerName?: string;
+  items?: any[]; // Adjust this type according to your QuotationPreview component
+  totalAmount?: number;
   name?: string;
   refNo?: string;
   refNumber?: string;
   date?: string;
   grandTotal?: number;
   isRevision: boolean;
-  [key: string]: string | number | boolean | undefined;
+  [key: string]: any;
 };
 
 type GroupedQuotation = {
@@ -31,6 +34,7 @@ export default function QuotationListPage() {
   const [groupedQuotations, setGroupedQuotations] = useState<GroupedQuotation[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedQuotation, setSelectedQuotation] = useState<Quotation | null>(null);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -53,37 +57,30 @@ export default function QuotationListPage() {
 
       originals.forEach((q) => {
         const ref = q.refNo || q.refNumber;
-        if (typeof ref !== 'string' || !ref.trim()) return;
-        if (!groupMap[ref]) {
-          groupMap[ref] = { original: q, revisions: [] };
-        } else {
-          groupMap[ref].original = q;
-        }
+        if (!ref?.trim()) return;
+        groupMap[ref] = { original: q, revisions: [] };
       });
 
       revisions.forEach((r) => {
         const revRef = r.refNo || r.refNumber;
-        if (typeof revRef !== 'string' || !revRef.trim()) return;
+        if (!revRef?.trim()) return;
         const baseRef = revRef.startsWith('QR-') ? revRef.replace('QR-', 'Q-') : revRef;
         if (!baseRef.trim()) return;
-        if (groupMap[baseRef]) {
-          groupMap[baseRef].revisions.push(r);
-        } else {
-          groupMap[baseRef] = { original: null, revisions: [r] };
-        }
+        if (!groupMap[baseRef]) groupMap[baseRef] = { original: null, revisions: [] };
+        groupMap[baseRef].revisions.push(r);
       });
 
+      // Sort revisions by date
       Object.values(groupMap).forEach((group) => {
-        group.revisions.sort((a, b) =>
-          (a.date || '') > (b.date || '') ? 1 : -1
-        );
+        group.revisions.sort((a, b) => (a.date || '') > (b.date || '') ? 1 : -1);
       });
 
-      const groupedArr = Object.values(groupMap).sort((a, b) =>
-        (b.original?.date || '') > (a.original?.date || '') ? 1 : -1
+      const groupedArr = Object.values(groupMap).sort(
+        (a, b) => (b.original?.date || '') > (a.original?.date || '') ? 1 : -1
       );
       setGroupedQuotations(groupedArr);
     };
+
     fetchAllQuotations();
   }, []);
 
@@ -211,15 +208,15 @@ export default function QuotationListPage() {
                         <td className="px-6 py-4 text-center">
                           <div className="flex items-center justify-center gap-2">
                             <button
-                              onClick={() => setSelectedQuotation(group.original)}
-                              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-lg hover:from-emerald-600 hover:to-green-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                              View
-                            </button>
+        onClick={() => router.push('/preview')}
+  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-700 text-white rounded-lg hover:from-purple-600 hover:to-purple-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm"
+>
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+  </svg>
+  View
+</button>
                             <button
                               onClick={() => group.original?.id && router.push(`/revise-quotation?id=${group.original.id}`)}
                               className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg hover:from-amber-600 hover:to-orange-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm"
@@ -234,7 +231,7 @@ export default function QuotationListPage() {
                       </tr>
                     )}
                     {/* Revisions */}
-                    {group.revisions.map((rev: Revision) => (
+                    {group.revisions.map((rev: Quotation) => (
 
                       <tr key={rev.id} className="bg-purple-50 hover:bg-purple-100/60 transition-colors duration-150">
                         <td className="px-10 py-4 border-l-4 border-purple-400">
@@ -360,26 +357,20 @@ export default function QuotationListPage() {
         </div>
       </div>
 
-      {selectedQuotation && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex justify-center items-center p-4">
+  {selectedQuotation && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex justify-center items-center p-4">
           <div className="bg-white w-full max-w-5xl max-h-[95vh] overflow-auto rounded-2xl shadow-2xl border border-white/50 relative">
-            <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-slate-200 p-4 flex justify-between items-center rounded-t-2xl">
+            <div className="sticky top-0 bg-white p-4 flex justify-between items-center border-b">
               <h2 className="font-semibold text-slate-800">Quotation Preview</h2>
-              <button
-                onClick={() => setSelectedQuotation(null)}
-                className="w-8 h-8 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center text-slate-600 hover:text-slate-800 transition-all duration-200"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <button onClick={() => setSelectedQuotation(null)}>Close</button>
             </div>
-            <div className="p-6">
-              <QuotationPreview quotation={selectedQuotation} />
-            </div>
+            
           </div>
-          </div>
+        </div>
       )}
+
+
+
       </div>
   );
 }
