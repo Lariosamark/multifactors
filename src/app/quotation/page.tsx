@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
+import { useState, useEffect, ChangeEvent, FormEvent, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import {
@@ -34,7 +34,7 @@ interface FormData {
   date: string;
 }
 
-export default function QuotationPage() {
+function QuotationPage() {
   const searchParams = useSearchParams();
   const projectId = searchParams.get('projectId');
   const refNoFromParams = searchParams.get('refNo');
@@ -378,3 +378,11 @@ export default function QuotationPage() {
     </div>
   );
 }
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading quotation form...</div>}>
+      <QuotationPage />
+    </Suspense>
+  );
+}
+
