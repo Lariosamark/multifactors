@@ -28,7 +28,7 @@ interface QuotationData {
   through?: string;
   subject?: string;
   description?: string;
-  items?: QuotationItem[];
+  items: QuotationItem[];   // 👈 not optional anymore
   totalPrice?: string;
   vat?: string;
   grandTotal?: string;
@@ -43,19 +43,19 @@ export default function RevisionQuotationForm() {
 
   const [originalRefNo, setOriginalRefNo] = useState('');
   const [revisionRefNo, setRevisionRefNo] = useState('');
-  const [formData, setFormData] = useState<QuotationData>({
-    name: '',
-    position: '',
-    address: '',
-    through: '',
-    subject: '',
-    description: '',
-    items: [{ qty: '', description: '', unitPrice: '', total: '' }],
-    totalPrice: '',
-    vat: '',
-    grandTotal: '',
-    date: '',
-  });
+ const [formData, setFormData] = useState<QuotationData>({
+  name: '',
+  position: '',
+  address: '',
+  through: '',
+  subject: '',
+  description: '',
+  items: [{ qty: '', description: '', unitPrice: '', total: '' }], // ✅ always defined
+  totalPrice: '',
+  vat: '',
+  grandTotal: '',
+  date: '',
+});
 
   // Fetch original quotation and generate revision refNo
   useEffect(() => {
