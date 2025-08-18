@@ -46,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loginInProgress, setLoginInProgress] = useState(false);
 
   const ensureProfile = async (u: FirebaseUser) => {
     if (!u.email) return;
@@ -85,8 +86,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (result?.user) {
           await ensureProfile(result.user);
         }
-      } catch {
-        // swallow errors or add toast/log here
+      } catch (err) {
+        console.error("Error getting redirect result:", err);
       }
     };
 
@@ -110,14 +111,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loginWithGoogle = async () => {
-    const isLocalhost = window.location.hostname === "localhost";
+    if (loginInProgress) return; // 🚫 prevent multiple requests
+    setLoginInProgress(true);
 
-    if (isLocalhost) {
-      // ✅ Dev mode → popup (no redirects)
-      await signInWithPopup(auth, googleProvider);
-    } else {
-      // ✅ Production (Vercel domain) → redirect
-      await signInWithRedirect(auth, googleProvider);
+    try {
+      if (process.env.NODE_ENV === "production") {
+        await signInWithRedirect(auth, googleProvider);
+      } else {
+        await signInWithPopup(auth, googleProvider);
+      }
+    } catch (error: any) {
+      if (error.code === "auth/popup-closed-by-user") {
+        console.log("User closed the login popup.");
+      } else if (error.code === "auth/cancelled-popup-request") {
+        console.log("Login already in progress, ignoring duplicate request.");
+      } else {
+        console.error("Google login error:", error);
+      }
+    } finally {
+      setLoginInProgress(false);
     }
   };
 
