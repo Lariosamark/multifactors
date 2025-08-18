@@ -110,15 +110,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loginWithGoogle = async () => {
-    // 👇 Tell Google OAuth to redirect back to your deployed Vercel domain
-    googleProvider.setCustomParameters({
-      redirect_uri: window.location.origin, // https://multifactors-sales.vercel.app
-    });
+    const isLocalhost = window.location.hostname === "localhost";
 
-    if (process.env.NODE_ENV === "production") {
-      await signInWithRedirect(auth, googleProvider);
-    } else {
+    if (isLocalhost) {
+      // ✅ Dev mode → popup (no redirects)
       await signInWithPopup(auth, googleProvider);
+    } else {
+      // ✅ Production (Vercel domain) → redirect
+      await signInWithRedirect(auth, googleProvider);
     }
   };
 
