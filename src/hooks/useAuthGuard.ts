@@ -1,8 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 /**
  * Guards page access based on role and approval.
@@ -10,33 +12,55 @@ import { useAuth } from "@/context/AuthContext";
  * - "employeeApproved": must be employee AND approved.
  */
 export function useAuthGuard(requirement: "admin" | "employeeApproved") {
-  const { user, profile, loading } = useAuth();
+  const { user, profile: initialProfile, loading } = useAuth();
   const router = useRouter();
+  const [profile, setProfile] = useState(initialProfile);
 
   useEffect(() => {
-    if (loading) return; // Wait for auth state
+    if (loading) return; // wait for auth state
 
-    // 1️⃣ Not logged in → go to /login
+    // Not logged in → go to /login
     if (!user) {
       router.replace("/login");
       return;
     }
 
-    // 2️⃣ No profile loaded yet
+    // No profile loaded yet
     if (!profile) return;
 
-    // 3️⃣ Role & approval checks
+    // Admin guard
     if (requirement === "admin" && profile.role !== "admin") {
       router.replace("/");
       return;
     }
 
+    // Employee with approval guard
     if (requirement === "employeeApproved") {
-      const approved = profile.role === "employee" && profile.approved;
-      if (!approved) {
-        router.replace("/login?status=pending");
+      if (profile.role !== "employee") {
+        router.replace("/");
         return;
       }
+
+      if (!profile.uid) return;
+
+      // Listen to real-time updates for the user's document
+      const userDocRef = doc(db, "users", profile.uid);
+      const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+        const data = docSnap.data();
+
+        if (!data?.approved) {
+          // Not approved → pending
+          router.replace("/login?status=pending");
+        } else {
+          // Approved → employee dashboard
+          router.replace("/employee/dashboard");
+        }
+
+        // Update local profile for reactivity
+        setProfile({ ...profile, ...data });
+      });
+
+      return () => unsubscribe();
     }
   }, [user, profile, loading, router, requirement]);
 

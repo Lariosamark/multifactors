@@ -1,16 +1,15 @@
-// PrintableQuotation.tsx
 'use client';
 
 import Image from 'next/image';
 
-type QuotationItem = {
+export type QuotationItem = {
   qty?: number;
   description?: string;
-  unitPrice: number | string;
-  total: number | string;
+  unitPrice?: number | string;
+  total?: number | string;
 };
 
-type Quotation = {
+export type Quotation = {
   refNo: string;
   date: string;
   name: string;
@@ -20,9 +19,9 @@ type Quotation = {
   subject?: string;
   description?: string;
   items?: QuotationItem[];
-  totalPrice: number | string;
-  vat: number | string;
-  grandTotal: number | string;
+  totalPrice?: number | string;
+  vat?: number | string;
+  grandTotal?: number | string;
 };
 
 type Props = {
@@ -32,8 +31,8 @@ type Props = {
 export default function PrintableQuotation({ quotation }: Props) {
   const q = quotation;
 
-  const formatCurrency = (value: string | number) => {
-    const num = typeof value === 'string' ? parseFloat(value) || 0 : value;
+  const formatCurrency = (value?: string | number) => {
+    const num = typeof value === 'string' ? parseFloat(value) || 0 : value || 0;
     return `₱ ${num.toFixed(2)}`;
   };
 
@@ -77,10 +76,10 @@ export default function PrintableQuotation({ quotation }: Props) {
 
       <div className="ref-section mb-4">
         <p>
-          <strong>Reference No:</strong> {q.refNo}
+          <strong>Reference No:</strong> {q.refNo || '-'}
         </p>
         <p>
-          <strong>Date:</strong> {q.date}
+          <strong>Date:</strong> {q.date || '-'}
         </p>
       </div>
 
@@ -88,33 +87,17 @@ export default function PrintableQuotation({ quotation }: Props) {
       <div className="flex justify-between items-start mb-4">
         <div>
           <p>
-            <strong>Customer Name:</strong> {q.name}
+            <strong>Customer Name:</strong> {q.name || '-'}
           </p>
-          {q.position && (
-            <p>
-              <strong>Position:</strong> {q.position}
-            </p>
-          )}
-          {q.address && (
-            <p>
-              <strong>Address:</strong> {q.address}
-            </p>
-          )}
-          {q.through && (
-            <p>
-              <strong>Through:</strong> {q.through}
-            </p>
-          )}
+          {q.position && <p><strong>Position:</strong> {q.position}</p>}
+          {q.address && <p><strong>Address:</strong> {q.address}</p>}
+          {q.through && <p><strong>Through:</strong> {q.through}</p>}
         </div>
       </div>
 
       {/* Subject and Description */}
       <div className="mb-4">
-        {q.subject && (
-          <p>
-            <strong>Subject:</strong> {q.subject}
-          </p>
-        )}
+        {q.subject && <p><strong>Subject:</strong> {q.subject}</p>}
         {q.description && (
           <p className="mt-2 whitespace-pre-line">
             <strong>Description:</strong>
@@ -125,7 +108,7 @@ export default function PrintableQuotation({ quotation }: Props) {
       </div>
 
       {/* Items Table */}
-      {q.items && q.items.length > 0 && q.items.some((item) => item.description) && (
+      {q.items && q.items.length > 0 && (
         <table className="w-full text-sm border border-gray-300 mb-6">
           <thead className="bg-gray-100">
             <tr>
@@ -136,32 +119,23 @@ export default function PrintableQuotation({ quotation }: Props) {
             </tr>
           </thead>
           <tbody>
-            {q.items.map(
-              (item, i) =>
-                item.description && (
-                  <tr key={i}>
-                    <td className="p-2 border text-center">{item.qty ?? '-'}</td>
-                    <td className="p-2 border">{item.description}</td>
-                    <td className="p-2 border text-right">{formatCurrency(item.unitPrice)}</td>
-                    <td className="p-2 border text-right">{formatCurrency(item.total)}</td>
-                  </tr>
-                )
-            )}
+            {q.items.map((item, i) => (
+              <tr key={i}>
+                <td className="p-2 border text-center">{item.qty ?? '-'}</td>
+                <td className="p-2 border">{item.description || '-'}</td>
+                <td className="p-2 border text-right">{formatCurrency(item.unitPrice)}</td>
+                <td className="p-2 border text-right">{formatCurrency(item.total)}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       )}
 
       {/* Totals */}
       <div className="text-right space-y-1 mt-8">
-        <p>
-          <strong>Total:</strong> {formatCurrency(q.totalPrice)}
-        </p>
-        <p>
-          <strong>VAT (12%):</strong> {formatCurrency(q.vat)}
-        </p>
-        <p className="text-lg font-bold">
-          Grand Total: {formatCurrency(q.grandTotal)}
-        </p>
+        <p><strong>Total:</strong> {formatCurrency(q.totalPrice)}</p>
+        <p><strong>VAT (12%):</strong> {formatCurrency(q.vat)}</p>
+        <p className="text-lg font-bold">Grand Total: {formatCurrency(q.grandTotal)}</p>
       </div>
 
       {/* Signature */}

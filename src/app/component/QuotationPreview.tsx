@@ -1,6 +1,5 @@
 'use client';
-
-import { useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import PrintableQuotation from '@/app/component/PrintableQuotation';
 
 type QuotationItem = {
@@ -13,18 +12,25 @@ type QuotationItem = {
 type Quotation = {
   refNo: string;
   date: string;
-  customerName: string;
-  items: QuotationItem[];
-  totalAmount: number;
-  [key: string]: string | number | QuotationItem[]; // for optional extra fields
+  name: string;
+  position?: string;
+  address?: string;
+  through?: string;
+  subject?: string;
+  description?: string;
+  items?: QuotationItem[];
+  totalPrice: number;
+  vat: number;
+  grandTotal: number;
 };
 
 type Props = {
-  quotation: Quotation;
+  quotation: Partial<Quotation>;
   onBack?: () => void;
 };
 
 export default function QuotationPreview({ quotation, onBack }: Props) {
+  const [selectedQuotation] = useState<Quotation | null>(quotation as Quotation | null);
   const printRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = () => {
@@ -36,59 +42,21 @@ export default function QuotationPreview({ quotation, onBack }: Props) {
         <!DOCTYPE html>
         <html>
           <head>
-            <title>Quotation ${quotation.refNo}</title>
+            <title>Quotation ${selectedQuotation?.refNo || ''}</title>
             <style>
-              body { 
-                font-family: Arial, sans-serif; 
-                margin: 0; 
-                padding: 20px; 
-              }
-              @page { 
-                size: A4; 
-                margin: 10mm; 
-              }
-              table { 
-                width: 100%; 
-                border-collapse: collapse; 
-              }
-              th, td { 
-                border: 1px solid #ddd; 
-                padding: 8px; 
-              }
-              .signature { 
-                margin-top: 60px; 
-                display: flex; 
-                justify-content: space-between; 
-              }
-              .signature-line { 
-                border-top: 1px solid #000; 
-                width: 200px; 
-                text-align: center; 
-              }
-              .header-container {
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-start;
-                margin-bottom: 20px;
-              }
-              .logo-section {
-                width: 100px;
-              }
-              .logo-img {
-                width: 200px;
-                height: auto;
-              }
-              .ref-section {
-                text-align: right;
-              }
+              body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+              @page { size: A4; margin: 10mm; }
+              table { width: 100%; border-collapse: collapse; }
+              th, td { border: 1px solid #ddd; padding: 8px; }
+              .signature { margin-top: 60px; display: flex; justify-content: space-between; }
+              .signature-line { border-top: 1px solid #000; width: 200px; text-align: center; }
+              .header-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+              .logo-section { width: 100px; }
+              .logo-img { width: 200px; height: auto; }
+              .ref-section { text-align: right; }
               @media print {
-                .header-container {
-                  display: flex !important;
-                  justify-content: space-between !important;
-                }
-                .ref-section {
-                  text-align: right !important;
-                }
+                .header-container { display: flex !important; justify-content: space-between !important; }
+                .ref-section { text-align: right !important; }
               }
             </style>
           </head>
@@ -97,7 +65,6 @@ export default function QuotationPreview({ quotation, onBack }: Props) {
           </body>
         </html>
       `);
-
       printWindow.document.close();
       setTimeout(() => {
         printWindow.print();
@@ -106,6 +73,8 @@ export default function QuotationPreview({ quotation, onBack }: Props) {
       window.print();
     }
   };
+
+  if (!selectedQuotation) return <p>No quotation selected</p>;
 
   return (
     <div>
@@ -125,8 +94,24 @@ export default function QuotationPreview({ quotation, onBack }: Props) {
           🖨 Print
         </button>
       </div>
+
       <div ref={printRef}>
-        
+        <PrintableQuotation
+          quotation={{
+            refNo: selectedQuotation.refNo,
+            date: selectedQuotation.date,
+            name: selectedQuotation.name,
+            position: selectedQuotation.position || '',
+            address: selectedQuotation.address || '',
+            through: selectedQuotation.through || '',
+            subject: selectedQuotation.subject || '',
+            description: selectedQuotation.description || '',
+            items: selectedQuotation.items || [],
+            totalPrice: selectedQuotation.totalPrice,
+            vat: selectedQuotation.vat,
+            grandTotal: selectedQuotation.grandTotal,
+          }}
+        />
       </div>
     </div>
   );

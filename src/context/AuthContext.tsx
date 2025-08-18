@@ -18,6 +18,7 @@ import {
   serverTimestamp,
   Timestamp,
   FieldValue,
+  onSnapshot,
 } from "firebase/firestore";
 
 type Role = "admin" | "employee";
@@ -38,6 +39,7 @@ type AuthState = {
   loading: boolean;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -46,8 +48,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [loginInProgress, setLoginInProgress] = useState(false);
 
+  // Create or merge Firestore profile on first login
   const ensureProfile = async (u: FirebaseUser) => {
     if (!u.email) return;
 
@@ -55,7 +57,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const existing = await getDoc(userRef);
 
     if (existing.exists()) {
-      setProfile(existing.data() as Profile);
+      const data = existing.data();
+      if (data) {
+        setProfile({
+          uid: data.uid ?? u.uid,
+          email: data.email ?? u.email,
+          displayName: data.displayName ?? u.displayName ?? null,
+          photoURL: data.photoURL ?? null,
+          role: (data.role as Role) ?? "employee",
+          approved: data.approved ?? false,
+          createdAt: data.createdAt ?? serverTimestamp(),
+        });
+      }
       return;
     }
 
@@ -63,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const adminSnap = await getDoc(adminCheckRef);
     const isAdmin = adminSnap.exists();
 
-    const newProfile: Omit<Profile, "createdAt"> & { createdAt: FieldValue } = {
+    const newProfile: Profile & { createdAt: FieldValue } = {
       uid: u.uid,
       email: u.email,
       displayName: u.displayName ?? u.email ?? null,
@@ -74,9 +87,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     await setDoc(userRef, newProfile, { merge: true });
-
     const fresh = await getDoc(userRef);
-    setProfile(fresh.data() as Profile);
+    if (fresh.exists()) {
+      const data = fresh.data();
+      setProfile({
+        uid: data.uid ?? u.uid,
+        email: data.email ?? u.email,
+        displayName: data.displayName ?? u.displayName ?? null,
+        photoURL: data.photoURL ?? null,
+        role: (data.role as Role) ?? "employee",
+        approved: data.approved ?? false,
+        createdAt: data.createdAt ?? serverTimestamp(),
+      });
+    }
+  };
+
+  // Refresh profile manually
+  const refreshProfile = async () => {
+    if (!user) return;
+    const userRef = doc(db, "users", user.uid);
+    const docSnap = await getDoc(userRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      if (data) {
+        setProfile({
+          uid: data.uid ?? user.uid,
+          email: data.email ?? user.email,
+          displayName: data.displayName ?? user.displayName ?? null,
+          photoURL: data.photoURL ?? null,
+          role: (data.role as Role) ?? "employee",
+          approved: data.approved ?? false,
+          createdAt: data.createdAt ?? serverTimestamp(),
+        });
+      }
+    }
   };
 
   useEffect(() => {
@@ -86,50 +130,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (result?.user) {
           await ensureProfile(result.user);
         }
-      } catch (err) {
-        console.error("Error getting redirect result:", err);
+      } catch {
+        // ignore
       }
     };
-
     handleRedirectResult();
 
-    const unsub = onAuthStateChanged(auth, async (u) => {
+    const unsubAuth = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (u) {
-        try {
-          await ensureProfile(u);
-        } finally {
-          setLoading(false);
-        }
+        await ensureProfile(u);
+
+        // Real-time listener for profile updates
+        const userRef = doc(db, "users", u.uid);
+        const unsubSnapshot = onSnapshot(userRef, (snapshot) => {
+          const data = snapshot.data();
+          if (data) {
+            setProfile({
+              uid: data.uid ?? u.uid,
+              email: data.email ?? u.email,
+              displayName: data.displayName ?? u.displayName ?? null,
+              photoURL: data.photoURL ?? null,
+              role: (data.role as Role) ?? "employee",
+              approved: data.approved ?? false,
+              createdAt: data.createdAt ?? serverTimestamp(),
+            });
+          }
+        });
+
+        // Stop snapshot listener on logout
+        return () => unsubSnapshot();
       } else {
         setProfile(null);
         setLoading(false);
       }
     });
 
-    return () => unsub();
+    return () => unsubAuth();
   }, []);
 
   const loginWithGoogle = async () => {
-    if (loginInProgress) return; // 🚫 prevent multiple requests
-    setLoginInProgress(true);
-
-    try {
-      if (process.env.NODE_ENV === "production") {
-        await signInWithRedirect(auth, googleProvider);
-      } else {
-        await signInWithPopup(auth, googleProvider);
-      }
-    } catch (error: any) {
-      if (error.code === "auth/popup-closed-by-user") {
-        console.log("User closed the login popup.");
-      } else if (error.code === "auth/cancelled-popup-request") {
-        console.log("Login already in progress, ignoring duplicate request.");
-      } else {
-        console.error("Google login error:", error);
-      }
-    } finally {
-      setLoginInProgress(false);
+    if (process.env.NODE_ENV === "production") {
+      await signInWithRedirect(auth, googleProvider);
+    } else {
+      await signInWithPopup(auth, googleProvider);
     }
   };
 
@@ -138,7 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, loginWithGoogle, logout }}>
+    <AuthContext.Provider value={{ user, profile, loading, loginWithGoogle, logout, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
