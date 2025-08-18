@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { db } from '@/lib/firebase';
 import {
   collection,
@@ -13,7 +13,7 @@ import {
   orderBy
 } from 'firebase/firestore';
 
-export default function PurchaseOrderPage() {
+function PurchaseOrderPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -226,5 +226,14 @@ export default function PurchaseOrderPage() {
         </div>
       </form>
     </div>
+  );
+}
+
+// ✅ Wrap in Suspense here in the same file
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PurchaseOrderPage />
+    </Suspense>
   );
 }
