@@ -73,9 +73,32 @@ function LoginPageInner() {
         <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl p-8 shadow-2xl hover:bg-white/15 transition-all duration-500">
           <div className="text-center mb-8">
             <div className="w-20 h-20 bg-gradient-to-r from-green-400 to-emerald-400 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg">
-              <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-0.257-0.257A6 6 0 1118 8zM2 8a8 8 0 1016 0A8 8 0 002 8zm8-3a3 3 0 100 6 3 3 0 000-6z" clipRule="evenodd"></path>
-              </svg>
+             <svg
+  className="w-10 h-10 text-white"
+  fill="currentColor"
+  viewBox="0 0 20 20"
+>
+  <path
+    fillRule="evenodd"
+    clipRule="evenodd"
+    d="
+      M18 8
+      a6 6 0 01-7.743 5.743
+      L10 14
+      l-0.257-0.257
+      A6 6 0 1118 8
+      z
+      M2 8
+      a8 8 0 1016 0
+      A8 8 0 002 8
+      z
+      m8-3
+      a3 3 0 100 6
+      3 3 0 000-6
+      z
+    "
+  />
+</svg>
             </div>
             <h1 className="text-4xl font-black text-white mb-3 bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
               Welcome Back
