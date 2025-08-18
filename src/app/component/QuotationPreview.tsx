@@ -126,6 +126,7 @@ export default function QuotationPreview({ quotation, onBack }: Props) {
         </button>
       </div>
       <div ref={printRef}>
+        
       </div>
     </div>
   );

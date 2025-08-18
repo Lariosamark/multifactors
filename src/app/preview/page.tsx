@@ -3,7 +3,7 @@
 import { useSearchParams } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 
 interface Project {
   refNo: string;
@@ -43,7 +43,7 @@ interface PurchaseOrder {
   total: number;
 }
 
-export default function PreviewPage() {
+function PreviewContent() {
   const searchParams = useSearchParams();
   const projectId = searchParams.get('projectId');
 
@@ -87,13 +87,6 @@ export default function PreviewPage() {
     else window.location.href = '/admin/dashboard';
   };
 
-  const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-
   const LogoHeader = ({ refNo }: { refNo: string }) => (
     <div className="mb-6">
       <div className="flex justify-center">
@@ -112,40 +105,35 @@ export default function PreviewPage() {
     return <p className="text-center mt-10">Loading Preview...</p>;
   }
 
-
   return (
-  <div className="bg-gray-200 min-h-screen flex flex-col items-center p-4">
-  <div className="flex gap-3 mb-4 print:hidden">
-  <button
-    onClick={() => window.history.back()}
-    className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded flex items-center gap-2 transition-colors duration-200"
-  >
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-    </svg>
-    Back
-  </button>
-  
-  <button
-    onClick={handleDashboardClick}
-    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center gap-2 transition-colors duration-200"
-  >
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-    </svg>
-    {userRole === 'admin' ? '/admin/dashboard' : userRole === 'Employee' ? '/employee/dashboard' : 'Dashboard'}
-  </button>
-  
-  <button
-    onClick={() => window.print()}
-    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2 transition-colors duration-200"
-  >
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-    </svg>
-    Print All
-  </button>
-</div>
+    <div className="bg-gray-200 min-h-screen flex flex-col items-center p-4">
+      {/* action buttons */}
+      <div className="flex gap-3 mb-4 print:hidden">
+        <button
+          onClick={() => window.history.back()}
+          className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded flex items-center gap-2 transition-colors duration-200"
+        >
+          Back
+        </button>
+
+        <button
+          onClick={handleDashboardClick}
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center gap-2 transition-colors duration-200"
+        >
+          {userRole === 'admin'
+            ? '/admin/dashboard'
+            : userRole === 'Employee'
+            ? '/employee/dashboard'
+            : 'Dashboard'}
+        </button>
+
+        <button
+          onClick={() => window.print()}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2 transition-colors duration-200"
+        >
+          Print All
+        </button>
+      </div>
 
       {/* Project Form Preview */}
       <form>
@@ -420,5 +408,13 @@ export default function PreviewPage() {
         </div>
      </form>
     </div>
+  );
+}
+
+export default function PreviewPage() {
+  return (
+    <Suspense fallback={<p className="text-center mt-10">Loading Preview...</p>}>
+      <PreviewContent />
+    </Suspense>
   );
 }
