@@ -1,3 +1,4 @@
+// src/lib/firebase.ts
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
@@ -9,9 +10,10 @@ const firebaseConfig = {
   storageBucket: "qmss-91e0f.firebasestorage.app",
   messagingSenderId: "74979323846",
   appId: "1:74979323846:web:35eff0add880efc5970cc7",
-  measurementId: "G-X6N0STXSP2"
+  measurementId: "G-X6N0STXSP2",
 };
 
+// Only initialize if no app exists
 export const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);

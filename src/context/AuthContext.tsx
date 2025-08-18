@@ -10,27 +10,18 @@ import {
   signOut,
   User as FirebaseUser,
 } from "firebase/auth";
-import {
-  collection,
-  doc,
-  getDoc,
-  setDoc,
-  serverTimestamp,
-  Timestamp,
-  FieldValue,
-  onSnapshot,
-} from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp, onSnapshot } from "firebase/firestore";
 
 type Role = "admin" | "employee";
 
-type Profile = {
+export type Profile = {
   uid: string;
   email: string | null;
   displayName: string | null;
   photoURL?: string | null;
   role: Role;
   approved: boolean;
-  createdAt?: Timestamp | FieldValue;
+  createdAt?: any;
 };
 
 type AuthState = {
@@ -49,7 +40,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Create or merge Firestore profile on first login
   const ensureProfile = async (u: FirebaseUser) => {
     if (!u.email) return;
 
@@ -57,29 +47,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const existing = await getDoc(userRef);
 
     if (existing.exists()) {
-      const data = existing.data();
-      if (data) {
-        setProfile({
-          uid: data.uid ?? u.uid,
-          email: data.email ?? u.email,
-          displayName: data.displayName ?? u.displayName ?? null,
-          photoURL: data.photoURL ?? null,
-          role: (data.role as Role) ?? "employee",
-          approved: data.approved ?? false,
-          createdAt: data.createdAt ?? serverTimestamp(),
-        });
-      }
+      setProfile(existing.data() as Profile);
       return;
     }
 
-    const adminCheckRef = doc(collection(db, "admins"), u.email);
+    // Check if user is admin
+    const adminCheckRef = doc(db, "admins", u.email);
     const adminSnap = await getDoc(adminCheckRef);
     const isAdmin = adminSnap.exists();
 
-    const newProfile: Profile & { createdAt: FieldValue } = {
+    const newProfile: Profile = {
       uid: u.uid,
       email: u.email,
-      displayName: u.displayName ?? u.email ?? null,
+      displayName: u.displayName ?? u.email,
       photoURL: u.photoURL ?? null,
       role: isAdmin ? "admin" : "employee",
       approved: isAdmin ? true : false,
@@ -87,78 +67,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     await setDoc(userRef, newProfile, { merge: true });
-    const fresh = await getDoc(userRef);
-    if (fresh.exists()) {
-      const data = fresh.data();
-      setProfile({
-        uid: data.uid ?? u.uid,
-        email: data.email ?? u.email,
-        displayName: data.displayName ?? u.displayName ?? null,
-        photoURL: data.photoURL ?? null,
-        role: (data.role as Role) ?? "employee",
-        approved: data.approved ?? false,
-        createdAt: data.createdAt ?? serverTimestamp(),
-      });
-    }
+    setProfile(newProfile);
   };
 
-  // Refresh profile manually
   const refreshProfile = async () => {
     if (!user) return;
     const userRef = doc(db, "users", user.uid);
     const docSnap = await getDoc(userRef);
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      if (data) {
-        setProfile({
-          uid: data.uid ?? user.uid,
-          email: data.email ?? user.email,
-          displayName: data.displayName ?? user.displayName ?? null,
-          photoURL: data.photoURL ?? null,
-          role: (data.role as Role) ?? "employee",
-          approved: data.approved ?? false,
-          createdAt: data.createdAt ?? serverTimestamp(),
-        });
-      }
-    }
+    if (docSnap.exists()) setProfile(docSnap.data() as Profile);
   };
 
   useEffect(() => {
-    const handleRedirectResult = async () => {
+    const handleRedirect = async () => {
       try {
         const result = await getRedirectResult(auth);
-        if (result?.user) {
-          await ensureProfile(result.user);
-        }
+        if (result?.user) await ensureProfile(result.user);
       } catch {
-        // ignore
+        // ignore errors
       }
     };
-    handleRedirectResult();
+    handleRedirect();
 
     const unsubAuth = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (u) {
         await ensureProfile(u);
 
-        // Real-time listener for profile updates
+        // Real-time profile updates
         const userRef = doc(db, "users", u.uid);
         const unsubSnapshot = onSnapshot(userRef, (snapshot) => {
           const data = snapshot.data();
-          if (data) {
-            setProfile({
-              uid: data.uid ?? u.uid,
-              email: data.email ?? u.email,
-              displayName: data.displayName ?? u.displayName ?? null,
-              photoURL: data.photoURL ?? null,
-              role: (data.role as Role) ?? "employee",
-              approved: data.approved ?? false,
-              createdAt: data.createdAt ?? serverTimestamp(),
-            });
-          }
+          if (data) setProfile(data as Profile);
         });
 
-        // Stop snapshot listener on logout
         return () => unsubSnapshot();
       } else {
         setProfile(null);
@@ -179,6 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     await signOut(auth);
+    setProfile(null);
   };
 
   return (
