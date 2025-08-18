@@ -16,16 +16,17 @@ export default function ProfilePage() {
     );
   }
 
-  const getRoleColor = (role) => {
-    const colors = {
-      admin: 'from-red-500 to-pink-600',
-      manager: 'from-orange-500 to-yellow-600',
-      user: 'from-blue-500 to-cyan-600',
-      moderator: 'from-green-500 to-emerald-600'
-    };
-    return colors[role?.toLowerCase()] || 'from-gray-500 to-gray-600';
-  };
+ type Role = "admin" | "manager" | "user" | "moderator" | string;
 
+const getRoleColor = (role: Role): string => {
+  const colors: Record<string, string> = {
+    admin: "from-red-500 to-pink-600",
+    manager: "from-orange-500 to-yellow-600",
+    user: "from-blue-500 to-cyan-600",
+    moderator: "from-green-500 to-emerald-600",
+  };
+   return colors[role?.toLowerCase()] || "from-gray-500 to-gray-600";
+};
   return (
     <div className="min-h-screen bg-white p-6">
       {/* Background decoration */}
