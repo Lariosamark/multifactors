@@ -22,10 +22,6 @@ import {
 
 type Role = "admin" | "employee";
 
-/**
- * What we keep in React state.
- * Note: Firebase can return nulls for email/displayName/photoURL.
- */
 type Profile = {
   uid: string;
   email: string | null;
@@ -33,11 +29,6 @@ type Profile = {
   photoURL?: string | null;
   role: Role;
   approved: boolean;
-  /**
-   * When read back from Firestore, this will be a `Timestamp`.
-   * During the initial write, we may temporarily hold a `FieldValue`,
-   * but we immediately re-read the doc so state ends up with a Timestamp.
-   */
   createdAt?: Timestamp | FieldValue;
 };
 
@@ -56,9 +47,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Create/merge Firestore profile on first login
   const ensureProfile = async (u: FirebaseUser) => {
-    if (!u.email) return; // we use email as admin doc id guard
+    if (!u.email) return;
 
     const userRef = doc(db, "users", u.uid);
     const existing = await getDoc(userRef);
@@ -68,12 +58,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Check if this email is listed as an admin
     const adminCheckRef = doc(collection(db, "admins"), u.email);
     const adminSnap = await getDoc(adminCheckRef);
     const isAdmin = adminSnap.exists();
 
-    // Write initial profile (createdAt as server timestamp)
     const newProfile: Omit<Profile, "createdAt"> & { createdAt: FieldValue } = {
       uid: u.uid,
       email: u.email,
@@ -86,7 +74,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     await setDoc(userRef, newProfile, { merge: true });
 
-    // Re-read the document so state holds a real Firestore Timestamp
     const fresh = await getDoc(userRef);
     setProfile(fresh.data() as Profile);
   };
@@ -123,6 +110,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loginWithGoogle = async () => {
+    // 👇 Tell Google OAuth to redirect back to your deployed Vercel domain
+    googleProvider.setCustomParameters({
+      redirect_uri: window.location.origin, // https://multifactors-sales.vercel.app
+    });
+
     if (process.env.NODE_ENV === "production") {
       await signInWithRedirect(auth, googleProvider);
     } else {
