@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
+import { useState, useEffect, ChangeEvent, FormEvent, Suspense } from 'react';
 import { db } from '@/lib/firebase';
 import {
   collection,
@@ -28,7 +28,7 @@ interface QuotationData {
   through?: string;
   subject?: string;
   description?: string;
-  items: QuotationItem[];   // 👈 not optional anymore
+  items: QuotationItem[];
   totalPrice?: string;
   vat?: string;
   grandTotal?: string;
@@ -36,28 +36,28 @@ interface QuotationData {
   refNo?: string;
 }
 
-export default function RevisionQuotationForm() {
+function RevisionQuotationFormInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const quotationId = searchParams.get('id');
 
   const [originalRefNo, setOriginalRefNo] = useState('');
   const [revisionRefNo, setRevisionRefNo] = useState('');
- const [formData, setFormData] = useState<QuotationData>({
-  name: '',
-  position: '',
-  address: '',
-  through: '',
-  subject: '',
-  description: '',
-  items: [{ qty: '', description: '', unitPrice: '', total: '' }], // ✅ always defined
-  totalPrice: '',
-  vat: '',
-  grandTotal: '',
-  date: '',
-});
+  const [formData, setFormData] = useState<QuotationData>({
+    name: '',
+    position: '',
+    address: '',
+    through: '',
+    subject: '',
+    description: '',
+    items: [{ qty: '', description: '', unitPrice: '', total: '' }],
+    totalPrice: '',
+    vat: '',
+    grandTotal: '',
+    date: '',
+  });
 
-  // Fetch original quotation and generate revision refNo
+  // fetch original quotation
   useEffect(() => {
     const fetchOriginal = async () => {
       if (!quotationId) return;
@@ -112,7 +112,6 @@ export default function RevisionQuotationForm() {
 
   const handleItemChange = (index: number, field: keyof QuotationItem, value: string) => {
     if (index < 0 || index >= formData.items!.length) return;
-
     const updatedItems = formData.items!.map((item, i) => {
       if (i !== index) return item;
       const updatedItem = { ...item, [field]: value };
@@ -161,25 +160,6 @@ export default function RevisionQuotationForm() {
     }));
   };
 
-  const handleTotalChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    const numValue = parseFloat(value) || 0;
-
-    if (name === 'totalPrice') {
-      const vat = numValue * 0.12;
-      const grandTotal = numValue + vat;
-      setFormData((prev) => ({ ...prev, totalPrice: value, vat: vat.toFixed(2), grandTotal: grandTotal.toFixed(2) }));
-    } else if (name === 'vat') {
-      const totalPrice = parseFloat(formData.totalPrice || '0');
-      const grandTotal = totalPrice + numValue;
-      setFormData((prev) => ({ ...prev, vat: value, grandTotal: grandTotal.toFixed(2) }));
-    } else if (name === 'grandTotal') {
-      const totalPrice = parseFloat(formData.totalPrice || '0');
-      const vat = numValue - totalPrice;
-      setFormData((prev) => ({ ...prev, vat: vat.toFixed(2), grandTotal: value }));
-    }
-  };
-
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     await addDoc(collection(db, 'quotationRevisions'), {
@@ -200,7 +180,6 @@ export default function RevisionQuotationForm() {
       </div>
     );
   }
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4 md:p-8">
@@ -442,49 +421,46 @@ export default function RevisionQuotationForm() {
             </div>
 
             {/* Totals Section */}
-            <div className="mb-8">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">Pricing Summary</h2>
-              <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl p-6 border border-gray-200">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">Total Price</label>
-                    <input
-                      type="text"
-                      name="totalPrice"
-                      value={formData.totalPrice}
-                      onChange={handleTotalChange}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg font-medium bg-gray-100 text-gray-600"
-                      placeholder="0.00"
-                      readOnly
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">VAT (12%)</label>
-                    <input
-                      type="text"
-                      name="vat"
-                      value={formData.vat}
-                      onChange={handleTotalChange}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg font-medium bg-gray-100 text-gray-600"
-                      placeholder="0.00"
-                      readOnly
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">Grand Total</label>
-                    <input
-                      type="text"
-                      name="grandTotal"
-                      value={formData.grandTotal}
-                      onChange={handleTotalChange}
-                      className="w-full px-4 py-3 border-2 border-indigo-200 rounded-lg font-bold text-lg bg-indigo-50 text-indigo-700"
-                      placeholder="0.00"
-                      readOnly
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
+           <div className="mb-8">
+  <h2 className="text-lg font-semibold text-gray-800 mb-4">Pricing Summary</h2>
+  <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl p-6 border border-gray-200">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">Total Price</label>
+        <input
+          type="text"
+          name="totalPrice"
+          value={formData.totalPrice}
+          className="w-full px-4 py-3 border border-gray-200 rounded-lg font-medium bg-gray-100 text-gray-600"
+          placeholder="0.00"
+          readOnly
+        />
+      </div>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">VAT (12%)</label>
+        <input
+          type="text"
+          name="vat"
+          value={formData.vat}
+          className="w-full px-4 py-3 border border-gray-200 rounded-lg font-medium bg-gray-100 text-gray-600"
+          placeholder="0.00"
+          readOnly
+        />
+      </div>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">Grand Total</label>
+        <input
+          type="text"
+          name="grandTotal"
+          value={formData.grandTotal}
+          className="w-full px-4 py-3 border-2 border-indigo-200 rounded-lg font-bold text-lg bg-indigo-50 text-indigo-700"
+          placeholder="0.00"
+          readOnly
+        />
+      </div>
+    </div>
+  </div>
+</div>
 
             {/* Submit Section */}
             <div className="flex flex-col sm:flex-row gap-4 sm:justify-end">
@@ -507,5 +483,13 @@ export default function RevisionQuotationForm() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RevisionQuotationForm() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading quotation...</div>}>
+      <RevisionQuotationFormInner />
+    </Suspense>
   );
 }
