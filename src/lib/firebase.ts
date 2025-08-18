@@ -5,16 +5,17 @@ import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC3sx1FyBNfJ5c_zPhPtCRhLcjiU-FCHK8",
-  authDomain: "qmss-91e0f.firebaseapp.com",
+  authDomain: "multifactors-sales.vercel.app", // 👈 use your Vercel domain here
   projectId: "qmss-91e0f",
-  storageBucket: "qmss-91e0f.firebasestorage.app",
+  storageBucket: "qmss-91e0f.appspot.com", // 👈 fixed typo (`firebasestorage.app` → `appspot.com`)
   messagingSenderId: "74979323846",
   appId: "1:74979323846:web:35eff0add880efc5970cc7",
   measurementId: "G-X6N0STXSP2"
 };
 
+// Prevent duplicate apps in Next.js hot reload
 export const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const googleProvider = new GoogleAuthProvider();
-// Force Gmail-only by using Google provider and no other auth methods.
