@@ -1,16 +1,15 @@
-  "use client";
+"use client";
 
 import { useAuth } from "@/context/AuthContext";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 
-export default function LoginPage() {
+function LoginPageInner() {
   const { loginWithGoogle, loading, profile } = useAuth();
   const params = useSearchParams();
   const pending = params.get("status") === "pending";
   const router = useRouter();
 
-  // ✅ Redirect when logged in & approved
   useEffect(() => {
     if (profile) {
       if (profile.role === "admin") {
@@ -22,6 +21,7 @@ export default function LoginPage() {
       }
     }
   }, [profile, router]);
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#2D5128] via-[#1a3015] to-[#2D5128] flex items-center justify-center p-8 relative overflow-hidden">
@@ -133,3 +133,10 @@ export default function LoginPage() {
         </div>
     );
     }
+    export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="text-white">Loading...</div>}>
+      <LoginPageInner />
+    </Suspense>
+  );
+}
