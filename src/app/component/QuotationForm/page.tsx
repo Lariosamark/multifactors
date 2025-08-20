@@ -372,60 +372,8 @@ export default function QuotationForm() {
                   <div className="space-y-4">
                     {formData.items.map((item, index) => (
                       <div key={index} className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-                        {/* Mobile Layout */}
-                        <div className="md:hidden space-y-3">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium text-gray-600">Item #{index + 1}</span>
-                            {formData.items.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveItem(index)}
-                                className="px-3 py-1 bg-red-500 text-white text-sm rounded-md hover:bg-red-600 transition-colors"
-                              >
-                                Remove
-                              </button>
-                            )}
-                          </div>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <label className="block text-xs font-medium text-gray-500 mb-1">Quantity</label>
-                              <input
-                                type="text"
-                                placeholder="0"
-                                value={item.qty}
-                                onChange={(e) => handleItemChange(index, 'qty', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-gray-500 mb-1">Unit Price</label>
-                              <input
-                                type="text"
-                                placeholder="0.00"
-                                value={item.unitPrice}
-                                onChange={(e) => handleItemChange(index, 'unitPrice', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                              />
-                            </div>
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-500 mb-1">Description</label>
-                            <input
-                              type="text"
-                              placeholder="Enter item description"
-                              value={item.description}
-                              onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-500 mb-1">Total</label>
-                            <div className="px-3 py-2 bg-gray-100 border border-gray-200 rounded-md text-sm font-medium text-gray-700">
-                              {item.total || '0.00'}
-                            </div>
-                          </div>
-                        </div>
-                        
+                       
+                          
                         {/* Desktop Layout */}
                         <div className="hidden md:grid md:grid-cols-5 gap-4 items-center">
                           <input

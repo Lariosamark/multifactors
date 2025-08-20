@@ -2,16 +2,18 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect, Suspense } from "react";
+import { useEffect, Suspense, useState } from "react";
 import { db } from "@/lib/firebase";
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot, getDoc, setDoc } from "firebase/firestore";
+import { getAuth, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 
 function LoginPageInner() {
-  const { loginWithGoogle, loading, profile, refreshProfile } = useAuth();
+  const { loginWithGoogle,  profile, refreshProfile } = useAuth();
   const params = useSearchParams();
   const pending = params.get("status") === "pending";
   const router = useRouter();
-
+  const [loading, setLoading] = useState (false);
+const auth = getAuth();
   // Real-time Firestore listener for approval changes
   useEffect(() => {
     if (!profile) return;
@@ -32,7 +34,6 @@ function LoginPageInner() {
   // Redirect logic based on role and approval
   useEffect(() => {
     if (!profile) return;
-
     if (profile.role === "admin") {
       router.push("/admin/dashboard");
     } else if (profile.role === "employee") {
@@ -41,24 +42,69 @@ function LoginPageInner() {
         router.push("/employee/dashboard");
       } else if (!pending) {
         // If not approved and not already on pending page, redirect to pending
-        router.push("/employee/dashboard");
+        router.push("/login?status=pending");
       }
     }
   }, [profile, router, pending]);
 
   // Handle Google login
+
   const handleLogin = async () => {
+    setLoading(true);
     try {
-      await loginWithGoogle();
-    } catch (error: any) {
-      if (error.code === "auth/popup-closed-by-user") {
-        alert("You closed the login popup. Please try again.");
-      } else {
-        console.error("Login error:", error);
-        alert("Login failed. Please try again.");
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Only allow Gmail logins
+      if (!user.email?.endsWith('@gmail.com')) {
+        alert('Only Gmail accounts are allowed.');
+        await auth.signOut();
+        setLoading(false);
+        return;
       }
+
+      // Check if user exists in Firestore
+      const userRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        // New user - create record with 'pending' status
+        await setDoc(userRef, {
+          uid: user.uid,
+          name: user.displayName,
+          email: user.email,
+          role: 'Employee',
+          status: 'pending', // pending approval
+          createdAt: new Date(),
+        });
+
+        setLoading(false);
+     
+        return;
+      }
+
+      // Existing user - check approval & role
+      const userData = userSnap.data();
+      if (userData.status !== 'approved') {
+        setLoading(false);
+        return;
+      }
+
+      // Redirect based on role
+      if (userData.role === 'Admin') {
+        router.push('/admin/dashboard');
+      } else {
+        router.push('/employee/dashboard');
+      }
+
+    } catch (error) {
+      console.error(error);
+      alert('Login failed.');
     }
+    setLoading(false);
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#2D5128] via-[#1a3015] to-[#2D5128] flex items-center justify-center p-8 relative overflow-hidden">

@@ -170,7 +170,7 @@ function RevisionQuotationFormInner() {
       createdAt: Timestamp.now(),
     });
     alert('Revision Quotation saved!');
-    router.push('/quotation-list');
+    router.push('/component/quotation-list');
   };
 
   if (!quotationId) {
@@ -466,7 +466,7 @@ function RevisionQuotationFormInner() {
             <div className="flex flex-col sm:flex-row gap-4 sm:justify-end">
               <button
                 type="button"
-                onClick={() => router.push('/quotation-list')}
+                onClick={() => router.push('/component/quotation-list')}
                 className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
               >
                 Cancel

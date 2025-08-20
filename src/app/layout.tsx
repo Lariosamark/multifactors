@@ -50,7 +50,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           )}
 
           {/* Main Content */}
-          <main className="flex-1 p-4 lg:ml-0">{children}</main>
+          <main className="flex-1 p-0 lg:ml-0">{children}</main>
         </AuthProvider>
       </body>
     </html>

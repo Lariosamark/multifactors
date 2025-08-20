@@ -61,32 +61,6 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile toggle button */}
-      <div className="lg:hidden p-4 fixed top-0 left-0 z-50">
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="p-2 bg-white rounded-md shadow hover:bg-gray-100 focus:outline-none"
-        >
-          {/* Hamburger icon */}
-          <svg
-            className="w-6 h-6 text-gray-700"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Overlay for mobile */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
 
       {/* Sidebar */}
       <aside
@@ -140,7 +114,7 @@ export default function Sidebar() {
           </div>
 
           {/* Navigation */}
-          <nav className="space-y-6 flex-1">
+          <nav className=" space-y-6 flex-1">
             {isAdmin && (
               <div>
                 <div className="mb-4 px-4">
