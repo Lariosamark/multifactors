@@ -77,7 +77,7 @@ function RevisionQuotationFormInner() {
           );
           const snapshot = await getDocs(qRev);
           const nextRevNum = snapshot.size + 1;
-          setRevisionRefNo(`${baseRef}-R${nextRevNum}`);
+          setRevisionRefNo(`R${baseRef}`);
         } else {
           setRevisionRefNo('');
         }
@@ -182,7 +182,7 @@ function RevisionQuotationFormInner() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4 md:p-8 ml-70">
       <div className="max-w-5xl mx-auto">
         {/* Header Section */}
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-8">

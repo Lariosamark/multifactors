@@ -7,7 +7,7 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center ml-70">
         <div className="bg-gray-100 rounded-2xl p-8 border border-gray-200 shadow-lg">
           <div className="animate-spin w-8 h-8 border-4 border-purple-400 border-t-transparent rounded-full mx-auto mb-4"></div>
           <p className="text-gray-700 text-center">Loading your profile...</p>

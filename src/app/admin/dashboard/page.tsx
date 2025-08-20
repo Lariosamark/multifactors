@@ -21,13 +21,13 @@ interface Quotation {
 }
 
 // Simple placeholder icon components (SVG inline)
-const IconPlaceholder = ({ size = 24 }: { size?: number }) => (
+const IconPlaceholder = ({ size = 10 }: { size?: number }) => (
   <div
     style={{
       width: size,
       height: size,
-      backgroundColor: '#ddd',
-      borderRadius: '4px',
+      backgroundColor: '#09521bff',
+      borderRadius: '2px',
     }}
   />
 );
@@ -129,7 +129,7 @@ export default function AdminDashboard() {
   );
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 ml-70">
       <div className="flex-1 flex flex-col">
         <header className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-slate-200 px-6 py-4 flex justify-between items-center">
           <div>
@@ -146,19 +146,19 @@ export default function AdminDashboard() {
               title="Total Quotations"
               value={totalQuotations.toLocaleString()}
               color="text-indigo-600"
-              trend="+12% from last month"
+              trend=""
             />
             <StatCard
               title="Pending Approvals"
               value={pendingApprovals}
               color="text-amber-600"
-              trend="3 urgent"
+              trend=""
             />
             <StatCard
               title="Active Users"
               value={userCount}
               color="text-emerald-600"
-              trend="+8 this week"
+              trend=""
             />
           </div>
 
@@ -187,7 +187,7 @@ export default function AdminDashboard() {
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-slate-900">
-                         ₱:{quotation.grandTotal ? quotation.grandTotal.toLocaleString() : '0'}
+                         ₱ {quotation.grandTotal ? quotation.grandTotal.toLocaleString() : '0'}
                       </p>
                     </div>
                   </div>
@@ -199,17 +199,17 @@ export default function AdminDashboard() {
               <h2 className="text-xl font-semibold text-slate-900 mb-6">Quick Actions</h2>
               <div className="space-y-3">
                 <Link href="/component/QuotationForm" passHref>
-                  <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200">
+                  <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 m-2">
                     Create New Quotation
                   </button>
                 </Link>
-                <Link href="/component/manage-users" passHref>
-                  <button className="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200">
+                <Link href="/admin/approvals" passHref>
+                  <button className="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 m-2">
                     Manage Users
                   </button>
                 </Link>
                 <Link href="/component/quotation-list" passHref>
-                  <button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200">
+                  <button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 m-2">
                     Quotation List
                   </button>
                 </Link>

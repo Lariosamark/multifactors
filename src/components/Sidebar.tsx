@@ -17,6 +17,7 @@ function NavItem({
   const pathname = usePathname();
   const active = pathname === href;
   return (
+    <>
     <Link
       href={href}
       className={`group flex items-center space-x-3 rounded-xl px-4 py-3 transition-all duration-300 ${
@@ -38,6 +39,7 @@ function NavItem({
       )}
       <span className="font-medium">{children}</span>
     </Link>
+    </>
   );
 }
 
@@ -63,6 +65,7 @@ export default function Sidebar() {
     <>
 
       {/* Sidebar */}
+      
       <aside
         className={`fixed lg:static top-0 left-0 z-50 h-full w-72 bg-gradient-to-b from-[#2D5128] via-[#1a3015] to-[#2D5128] border-r border-white/10 backdrop-blur-xl overflow-y-auto transform transition-transform duration-300 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
@@ -117,7 +120,7 @@ export default function Sidebar() {
           <nav className=" space-y-6 flex-1">
             {isAdmin && (
               <div>
-                <div className="mb-4 px-4">
+                <div className=" mb-4 px-4">
                   <h3 className="text-xs uppercase text-green-300/60 font-bold tracking-wider">
                     Admin Panel
                   </h3>

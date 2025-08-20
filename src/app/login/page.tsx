@@ -8,46 +8,14 @@ import { doc, onSnapshot, getDoc, setDoc } from "firebase/firestore";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 
 function LoginPageInner() {
-  const { loginWithGoogle,  profile, refreshProfile } = useAuth();
+  const { profile, refreshProfile } = useAuth();
   const params = useSearchParams();
   const pending = params.get("status") === "pending";
   const router = useRouter();
-  const [loading, setLoading] = useState (false);
-const auth = getAuth();
-  // Real-time Firestore listener for approval changes
-  useEffect(() => {
-    if (!profile) return;
 
-    const userRef = doc(db, "users", profile.uid);
-    const unsubscribe = onSnapshot(userRef, (snapshot) => {
-      const data = snapshot.data();
-      if (!data) return;
 
-      if (data.approved !== profile.approved) {
-        refreshProfile(); // Update context if approval changes
-      }
-    });
-
-    return () => unsubscribe();
-  }, [profile, refreshProfile]);
-
-  // Redirect logic based on role and approval
-  useEffect(() => {
-    if (!profile) return;
-    if (profile.role === "admin") {
-      router.push("/admin/dashboard");
-    } else if (profile.role === "employee") {
-      if (profile.approved) {
-        // If approved, redirect to employee dashboard
-        router.push("/employee/dashboard");
-      } else if (!pending) {
-        // If not approved and not already on pending page, redirect to pending
-        router.push("/login?status=pending");
-      }
-    }
-  }, [profile, router, pending]);
-
-  // Handle Google login
+  const [loading, setLoading] = useState(false);
+  const auth = getAuth();
 
   const handleLogin = async () => {
     setLoading(true);
@@ -78,15 +46,15 @@ const auth = getAuth();
           status: 'pending', // pending approval
           createdAt: new Date(),
         });
-
+        router.push("/login?status=pending");
         setLoading(false);
-     
         return;
       }
 
       // Existing user - check approval & role
       const userData = userSnap.data();
       if (userData.status !== 'approved') {
+        router.push("/login?status=pending");
         setLoading(false);
         return;
       }

@@ -51,7 +51,7 @@ export default function AdminSupplierCustomerPage() {
   }, []);
 
   return (
-    <div className="p-8 min-h-screen bg-gray-50">
+    <div className="p-8 min-h-screen bg-gray-50 ml-70">
       <h1 className="text-3xl font-bold mb-6">Admin: Manage Suppliers & Customers</h1>
 
       <div className="grid md:grid-cols-2 gap-8">

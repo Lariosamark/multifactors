@@ -59,6 +59,7 @@ export default function PrintableQuotation({ quotation }: Props) {
       `}</style>
 
       {/* Centered Logo */}
+      <header></header>
       <div className="mx-auto mb-6 text-center">
         <Image
           src="/logo.png"

@@ -119,7 +119,7 @@ function PurchaseOrderPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto ">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 p-6 rounded-lg mb-8 shadow-sm">
         <div className="flex items-center space-x-3">

@@ -203,15 +203,15 @@ function PreviewContent() {
         </div>
 
         {/* Signature Section */}
-        <div className="mt-12 pt-8 border-none">
+        <div className="pt-8 border-none">
           <div className="grid grid-cols-2 gap-12">
             <div className="space-y-5">
-              <div className="border-b-2 border-gray-900 h-30"></div>
+              <div className="border-b-2 border-gray-900 h-23"></div>
               <p className="text-sm text-gray-700 text-center font-medium">Project Manager Signature</p>
             </div>
             
             <div className="space-y-4">
-              <div className="border-b-2 border-gray-900 h-30"></div>
+              <div className="border-b-2 border-gray-900 h-23"></div>
               <p className="text-sm text-gray-700 text-center font-medium">Client Signature</p>
             </div>
           </div>
@@ -228,7 +228,7 @@ function PreviewContent() {
         </div>
 
         {/* Customer Details */}
-        <div className="mb-8">
+        <div className="">
           <h2 className="text-lg font-bold text-gray-900 border-none pb-2 mb-6 uppercase tracking-wide">
             Customer Information
           </h2>
@@ -237,31 +237,31 @@ function PreviewContent() {
             <div className="space-y-4">
               <div className="space-y-1">
                 <dt className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Customer Name:</dt>
-                <dd className="text-base text-gray-900 font-medium border-none pb-1 min-h-[1.5rem]">{quotation.name}</dd>
+                <dd className="text-base text-gray-900 font-medium border-none  min-h-[1.5rem]">{quotation.name}</dd>
               </div>
               
               <div className="space-y-1">
                 <dt className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Position:</dt>
-                <dd className="text-base text-gray-900 font-medium border-none pb-1 min-h-[1.5rem]">{quotation.position}</dd>
+                <dd className="text-base text-gray-900 font-medium border-none  min-h-[.5 rem]">{quotation.position}</dd>
               </div>
             </div>
             
             <div className="space-y-4">
               <div className="space-y-1">
                 <dt className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Date:</dt>
-                <dd className="text-base text-gray-900 font-medium border-none pb-1 min-h-[1.5rem]">{quotation.date}</dd>
+                <dd className="text-base text-gray-900 font-medium border-none  min-h-[1.5rem]">{quotation.date}</dd>
               </div>
             </div>
           </div>
           
-          <div className="mt-4 space-y-1">
+          <div className="space-y-1">
             <dt className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Address:</dt>
-            <dd className="text-base text-gray-900 font-medium border-none pb-1 min-h-[1.5rem]">{quotation.address}</dd>
+            <dd className="text-base text-gray-900 font-medium border-none  min-h-[1.5rem]">{quotation.address}</dd>
           </div>
 
-          <div className="mt-4 space-y-1">
+          <div className="space-y-1">
             <dt className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Description:</dt>
-            <dd className="text-base text-gray-900 font-medium border-none-gray-400 pb-1 min-h-[1.5rem]">{quotation.description}</dd>
+            <dd className="text-base text-gray-900 font-medium border-none-gray-400  min-h-[1.5rem]">{quotation.description}</dd>
           </div>
         </div>
 
@@ -303,7 +303,7 @@ function PreviewContent() {
 
 
         {/* Totals */}
-        <div className="mb-4">
+        <div className="">
   <div className="flex justify-end">
     <div className="w-50"> {/* Reduced width */}
       <div className="border-1 border-gray-900 bg-gray-50 p-1"> {/* Smaller padding */}
@@ -328,7 +328,7 @@ function PreviewContent() {
 
 
         {/* Signatures */}
-        <div className="mt-12 pt-8 border-none-300">
+        <div className=" pt-8 border-none-300">
           <div className="grid grid-cols-2 gap-12">
             <div className="space-y-4">
               <div className="border-b-2 border-gray-900 h-20"></div>
@@ -393,7 +393,7 @@ function PreviewContent() {
         </div>
 
         {/* Signature Section */}
-        <div className="mt-12 pt-8 border-none">
+        <div className="pt-8 border-none">
           <div className="grid grid-cols-2 gap-12">
             <div className="space-y-4">
               <div className="border-b-2 border-gray-900 h-35"></div>

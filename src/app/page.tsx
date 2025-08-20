@@ -5,7 +5,7 @@ import Image from 'next/image'; // <-- Import Next.js Image component
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-[#2D5128] via-[#1a3015] to-[#2D5128] text-white flex flex-col relative overflow-hidden">
+    <main className="min-h-screen bg-gradient-to-br from-[#2D5128] via-[#1a3015] to-[#2D5128] text-white flex flex-col relative overflow-hidden m-0">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>

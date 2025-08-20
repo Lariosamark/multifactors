@@ -125,7 +125,7 @@ export default function ProjectPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto pt-15">
+    <div className="max-w-4xl mx-auto pt-15 ">
       {/* Header */}
       <div className="bg-gradient-to-r from-slate-50 to-blue-50 border-l-4 border-blue-500 p-6 rounded-lg shadow-sm mb-8">
         <div className="flex items-center justify-between">

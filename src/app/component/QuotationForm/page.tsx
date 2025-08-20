@@ -9,6 +9,8 @@ import {
   getDocs,
   query,
   where,
+  orderBy,
+  limit
 } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
@@ -53,29 +55,38 @@ export default function QuotationForm() {
   });
 
   useEffect(() => {
-    const generateRefNo = async () => {
-      const now = new Date();
-      const yyyymm = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
-
-      const qRef = query(
-        collection(db, 'quotations'),
-        where('refNo', '>=', `${yyyymm}-000`),
-        where('refNo', '<', `${yyyymm}-999`)
-      );
-      const snapshot = await getDocs(qRef);
-      const count = snapshot.size + 1;
-
-      const newRefNo = `Q-${yyyymm}-${String(count).padStart(3, '0')}`;
-      setRefNo(newRefNo);
-
-      setFormData((prev) => ({
+       const generateRefNo = async () => {
+         const now = new Date();
+         const yyyymm = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
+   
+         const q = query(
+           collection(db, 'quotations'),
+           where('refNo', '>=', `Q-${yyyymm}-000`),
+           where('refNo', '<=', `Q-${yyyymm}-999`),
+           orderBy('refNo', 'desc'),
+           limit(1)
+         );
+   
+         const querySnap = await getDocs(q);
+         let nextNumber = 1;
+         if (!querySnap.empty) {
+           const lastRef = querySnap.docs[0].data().refNo as string;
+           const lastNum = parseInt(lastRef.split('-')[2], 10);
+           nextNumber = lastNum + 1;
+         }
+   
+         setRefNo(`Q-${yyyymm}-${String(nextNumber).padStart(3, '0')}`);
+         
+         setFormData((prev) => ({
         ...prev,
         date: now.toLocaleDateString('en-CA'),
       }));
-    };
-
-    generateRefNo();
-  }, []);
+       };
+   
+       generateRefNo();
+     }, []);
+  
+  /** */
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -167,13 +178,17 @@ export default function QuotationForm() {
   // your removal logic here
 };
     const handleAddItem = () => {
+  setFormData((prev) => ({
+      ...prev,
+      items: [...prev.items, { qty: '', description: '', unitPrice: '', total: '' }],
+    }));
   };
 
 
   return (
     
     
-    <div className="min-h-screen  p-4 md:p-8">
+    <div className="min-h-screen  p-4 md:p-8 ml-70">
       {/* Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
 

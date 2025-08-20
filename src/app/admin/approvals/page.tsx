@@ -12,7 +12,7 @@ interface AppUser {
   name?: string;
   email?: string;
   status?: 'approved' | 'declined' | 'pending' | string;
-  role?: 'Admin' | 'User' | string;
+  role?: 'admin' | 'User' | string;
 }
 
 export default function ManageUsersPage() {
@@ -29,10 +29,6 @@ export default function ManageUsersPage() {
     const unsubscribe = onAuthStateChanged(auth, (user: FirebaseUser | null) => {
       if (!user) {
         router.push('/login');
-        return;
-      }
-      if (user.email !== 'markanthonylariosa3@gmail.com') {
-        router.push('/');
         return;
       }
       fetchUsers();
@@ -117,7 +113,7 @@ export default function ManageUsersPage() {
   };
 
   const getRoleIcon = (role: string) => {
-    if (role === 'Admin') {
+    if (role === 'admin') {
        return (
       <svg
         className="w-4 h-4"
@@ -175,7 +171,7 @@ export default function ManageUsersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black p-6">
+    <div className="min-h-screen bg-black p-6 ml-70">
       {/* Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-full blur-3xl animate-pulse"></div>
@@ -316,7 +312,7 @@ export default function ManageUsersPage() {
                     <td className="p-6">
                       <div className="flex items-center gap-2">
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                          user.role === 'Admin' ? 'bg-violet-500/20 text-violet-400' : 'bg-blue-500/20 text-blue-400'
+                          user.role === 'admin' ? 'bg-violet-500/20 text-violet-400' : 'bg-blue-500/20 text-blue-400'
                         }`}>
                           {getRoleIcon(user.role || 'User')}
                         </div>
@@ -336,7 +332,7 @@ export default function ManageUsersPage() {
                       </span>
                     </td>
                     <td className="p-6">
-                      {user.role !== 'Admin' && (
+                      {user.role !== 'admin' && (
                         <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => handleApprove(user.id)}
@@ -391,7 +387,7 @@ export default function ManageUsersPage() {
                           </button>
                         </div>
                       )}
-                      {user.role === 'Admin' && (
+                      {user.role === 'admin' && (
                         <div className="flex justify-center">
                           <span className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-violet-500/20 text-violet-400 border border-violet-500/30">
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
