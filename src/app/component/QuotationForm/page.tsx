@@ -30,6 +30,7 @@ interface Project {
   clientContactNumber: string;
   description: string;
   refNo: string;
+  adminStatus?: 'approved' | 'on-review' | 'cancelled' | 'onhold' | '';
 }
 
 interface FormDataType {
@@ -90,56 +91,64 @@ export default function QuotationForm() {
     loadProjects();
   }, []);
 
+  // Generate reference number
   useEffect(() => {
-       const generateRefNo = async () => {
-         const now = new Date();
-         const yyyymm = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
-   
-         const q = query(
-           collection(db, 'quotations'),
-           where('refNo', '>=', `Q-${yyyymm}-000`),
-           where('refNo', '<=', `Q-${yyyymm}-999`),
-           orderBy('refNo', 'desc'),
-           limit(1)
-         );
-   
-         const querySnap = await getDocs(q);
-         let nextNumber = 1;
-         if (!querySnap.empty) {
-           const lastRef = querySnap.docs[0].data().refNo as string;
-           const lastNum = parseInt(lastRef.split('-')[2], 10);
-           nextNumber = lastNum + 1;
-         }
-   
-         setRefNo(`Q-${yyyymm}-${String(nextNumber).padStart(3, '0')}`);
-         
-         setFormData((prev) => ({
+    const generateRefNo = async () => {
+      const now = new Date();
+      const yyyymm = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+      const q = query(
+        collection(db, 'quotations'),
+        where('refNo', '>=', `Q-${yyyymm}-000`),
+        where('refNo', '<=', `Q-${yyyymm}-999`),
+        orderBy('refNo', 'desc'),
+        limit(1)
+      );
+
+      const querySnap = await getDocs(q);
+      let nextNumber = 1;
+      if (!querySnap.empty) {
+        const lastRef = querySnap.docs[0].data().refNo as string;
+        const lastNum = parseInt(lastRef.split('-')[2], 10);
+        nextNumber = lastNum + 1;
+      }
+
+      setRefNo(`Q-${yyyymm}-${String(nextNumber).padStart(3, '0')}`);
+      
+      setFormData((prev) => ({
         ...prev,
         date: now.toLocaleDateString('en-CA'),
       }));
-       };
-   
-       generateRefNo();
-     }, []);
+    };
+
+    generateRefNo();
+  }, []);
 
   // Handle project selection
-  const handleProjectSelect = (projectId: string) => {
-    const selectedProject = projects.find(p => p.id === projectId);
-    if (selectedProject) {
-      setFormData((prev) => ({
-        ...prev,
-        name: selectedProject.clientName || '',
-        position: selectedProject.clientPosition || '',
-        address: selectedProject.clientAddress || '',
-        subject: selectedProject.projectName || '',
-        description: selectedProject.description || '',
-        projectId: projectId,
-      }));
-      setSelectedProjectId(projectId);
+const handleProjectSelect = (projectId: string) => {
+  const selectedProject = projects.find(p => p.id === projectId);
+  if (selectedProject) {
+    // ✅ Only allow approved projects
+    if (selectedProject.adminStatus !== 'approved') {
+      alert('This project is not approved. You cannot create a quotation for it.');
+      setSelectedProjectId('');
+      setShowProjectDropdown(false);
+      return;
     }
-    setShowProjectDropdown(false);
-  };
 
+    setFormData((prev) => ({
+      ...prev,
+      name: selectedProject.clientName || '',
+      position: selectedProject.clientPosition || '',
+      address: selectedProject.clientAddress || '',
+      subject: selectedProject.projectName || '',
+      description: selectedProject.description || '',
+      projectId: projectId,
+    }));
+    setSelectedProjectId(projectId);
+  }
+  setShowProjectDropdown(false);
+};
   // Clear project selection
   const handleClearProject = () => {
     setSelectedProjectId('');
@@ -155,8 +164,7 @@ export default function QuotationForm() {
     }));
   };
   
-  /** */
-
+  // Handle field change
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -164,7 +172,6 @@ export default function QuotationForm() {
       [name]: value,
     }));
   };
-  
 
   const handleItemChange = (index: number, field: keyof QuotationItem, value: string) => {
     if (index < 0 || index >= formData.items.length) return;
@@ -228,29 +235,40 @@ export default function QuotationForm() {
     }
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const submissionData = {
-      ...formData,
-      refNo,
-      createdAt: Timestamp.now(),
-      items: useItems ? formData.items : [],
-    };
+  // Submit quotation
+const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
 
-    await addDoc(collection(db, 'quotations'), submissionData);
-    alert('Quotation saved!');
-    router.push('/component/quotation-list');
-    
+  if (selectedProjectId) {
+    const selectedProject = projects.find(p => p.id === selectedProjectId);
+    if (selectedProject && selectedProject.adminStatus !== 'approved') {
+      alert('You cannot create a quotation because the selected project is not approved.');
+      return;
+    }
+  }
+
+  const submissionData = {
+    ...formData,
+    refNo,
+    createdAt: Timestamp.now(),
+    items: useItems ? formData.items : [],
   };
 
-    const handleRemoveItem = (index: number) => {
-      setFormData((prev) => ({
-        ...prev,
-        items: prev.items.filter((_, i) => i !== index),
-      }));
+  await addDoc(collection(db, 'quotations'), submissionData);
+  alert('Quotation saved!');
+  router.push('/component/quotation-list');
+};
+
+
+  const handleRemoveItem = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      items: prev.items.filter((_, i) => i !== index),
+    }));
   };
-    const handleAddItem = () => {
-  setFormData((prev) => ({
+
+  const handleAddItem = () => {
+    setFormData((prev) => ({
       ...prev,
       items: [...prev.items, { qty: '', description: '', unitPrice: '', total: '' }],
     }));
