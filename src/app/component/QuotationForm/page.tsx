@@ -21,6 +21,17 @@ interface QuotationItem {
   total: string;
 }
 
+interface Project {
+  id: string;
+  projectName: string;
+  clientName: string;
+  clientPosition: string;
+  clientAddress: string;
+  clientContactNumber: string;
+  description: string;
+  refNo: string;
+}
+
 interface FormDataType {
   name: string;
   position: string;
@@ -33,10 +44,14 @@ interface FormDataType {
   vat: string;
   grandTotal: string;
   date: string;
+  projectId?: string;
 }
 
 export default function QuotationForm() {
   const [useItems, setUseItems] = useState<boolean>(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+  const [showProjectDropdown, setShowProjectDropdown] = useState<boolean>(false);
   const router = useRouter();
   const [refNo, setRefNo] = useState('');
   
@@ -53,6 +68,27 @@ export default function QuotationForm() {
     grandTotal: '',
     date: '',
   });
+
+  // Load projects from Firebase
+  useEffect(() => {
+    const loadProjects = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'projects'));
+        const projectsData: Project[] = [];
+        querySnapshot.forEach((doc) => {
+          projectsData.push({
+            id: doc.id,
+            ...doc.data()
+          } as Project);
+        });
+        setProjects(projectsData);
+      } catch (error) {
+        console.error('Error loading projects:', error);
+      }
+    };
+
+    loadProjects();
+  }, []);
 
   useEffect(() => {
        const generateRefNo = async () => {
@@ -85,6 +121,39 @@ export default function QuotationForm() {
    
        generateRefNo();
      }, []);
+
+  // Handle project selection
+  const handleProjectSelect = (projectId: string) => {
+    const selectedProject = projects.find(p => p.id === projectId);
+    if (selectedProject) {
+      setFormData((prev) => ({
+        ...prev,
+        name: selectedProject.clientName || '',
+        position: selectedProject.clientPosition || '',
+        address: selectedProject.clientAddress || '',
+        subject: selectedProject.projectName || '',
+        description: selectedProject.description || '',
+        projectId: projectId,
+      }));
+      setSelectedProjectId(projectId);
+    }
+    setShowProjectDropdown(false);
+  };
+
+  // Clear project selection
+  const handleClearProject = () => {
+    setSelectedProjectId('');
+    setFormData((prev) => ({
+      ...prev,
+      name: '',
+      position: '',
+      address: '',
+      through: '',
+      subject: '',
+      description: '',
+      projectId: undefined,
+    }));
+  };
   
   /** */
 
@@ -175,8 +244,11 @@ export default function QuotationForm() {
   };
 
     const handleRemoveItem = (index: number) => {
-  // your removal logic here
-};
+      setFormData((prev) => ({
+        ...prev,
+        items: prev.items.filter((_, i) => i !== index),
+      }));
+  };
     const handleAddItem = () => {
   setFormData((prev) => ({
       ...prev,
@@ -252,6 +324,89 @@ export default function QuotationForm() {
                       <span className="text-gray-400">📅</span>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Project Reference Section */}
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <span className="w-8 h-8 bg-yellow-100 text-yellow-600 rounded-lg flex items-center justify-center mr-3 text-sm font-bold">📁</span>
+                Project Reference
+              </h2>
+              
+              <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Select Project (Optional)</label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowProjectDropdown(!showProjectDropdown)}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-white text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors flex items-center justify-between"
+                    >
+                      <span className={selectedProjectId ? 'text-gray-900' : 'text-gray-500'}>
+                        {selectedProjectId 
+                          ? projects.find(p => p.id === selectedProjectId)?.projectName || 'Select a project'
+                          : 'Select a project'
+                        }
+                      </span>
+                      <span className={`transform transition-transform ${showProjectDropdown ? 'rotate-180' : ''}`}>
+                        ▼
+                      </span>
+                    </button>
+                    
+                    {showProjectDropdown && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        <div className="p-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowProjectDropdown(false);
+                              setSelectedProjectId('');
+                            }}
+                            className="w-full px-3 py-2 text-left text-gray-500 hover:bg-gray-50 rounded-md text-sm"
+                          >
+                            No project selected
+                          </button>
+                        </div>
+                        <div className="border-t border-gray-200">
+                          {projects.length === 0 ? (
+                            <div className="p-4 text-center text-gray-500 text-sm">
+                              No projects available
+                            </div>
+                          ) : (
+                            projects.map((project) => (
+                              <button
+                                key={project.id}
+                                type="button"
+                                onClick={() => handleProjectSelect(project.id)}
+                                className="w-full px-4 py-3 text-left hover:bg-blue-50 focus:bg-blue-50 border-b border-gray-100 last:border-b-0 focus:outline-none"
+                              >
+                                <div className="font-medium text-gray-900">{project.projectName}</div>
+                                <div className="text-sm text-gray-500">{project.clientName}</div>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {selectedProjectId && (
+                    <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 mt-2">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-blue-600">✓</span>
+                        <span className="text-sm text-blue-700 font-medium">Project selected - form auto-filled</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleClearProject}
+                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

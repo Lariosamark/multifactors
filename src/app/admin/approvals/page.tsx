@@ -157,7 +157,7 @@ export default function ManageUsersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex items-center justify-center ">
+      <div className="min-h-screen  from-slate-950 via-slate-900 to-indigo-950 flex items-center justify-center ">
         <div className="text-center">
           <div className="relative w-20 h-20 mx-auto mb-6">
             <div className="absolute inset-0 rounded-full border-4 border-slate-700"></div>
@@ -171,7 +171,7 @@ export default function ManageUsersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black p-6 ml-70">
+    <div className="min-h-screen bg-white p-6 ml-70">
       {/* Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-full blur-3xl animate-pulse"></div>
@@ -188,29 +188,29 @@ export default function ManageUsersPage() {
               </svg>
             </div>
             <div>
-              <h1 className="text-3xl font-black bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-black text-black">
                 Manage Users
               </h1>
-              <p className="text-slate-400 mt-1">Review and manage user access requests</p>
+              <p className="text-black mt-1 ">Review and manage user access requests</p>
             </div>
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-gradient-to-br from-white/5 to-white/10 rounded-2xl p-6 border border-white/10 backdrop-blur-sm">
-              <div className="flex items-center gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 ">
+            <div className="bg-gradient-to-br from-[#2D5128] via-[#1a3015] to-[#2D5128] rounded-2xl p-6 border border-white/10 backdrop-blur-sm">
+              <div className="flex items-center gap-3 ">
                 <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
                   <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857" />
                   </svg>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-white">{users.length}</p>
+                  <p className="text-2xl font-bold text-white ">{users.length}</p>
                   <p className="text-xs text-slate-400">Total Users</p>
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-white/5 to-white/10 rounded-2xl p-6 border border-white/10 backdrop-blur-sm">
+            <div className="bg-gradient-to-br from-[#2D5128] via-[#1a3015] to-[#2D5128] rounded-2xl p-6 border border-white/10 backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
                   <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -223,7 +223,7 @@ export default function ManageUsersPage() {
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-white/5 to-white/10 rounded-2xl p-6 border border-white/10 backdrop-blur-sm">
+            <div className="bg-gradient-to-br from-[#2D5128] via-[#1a3015] to-[#2D5128] rounded-2xl p-6 border border-white/10 backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-amber-500/20 rounded-xl flex items-center justify-center">
                   <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,7 +236,7 @@ export default function ManageUsersPage() {
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-white/5 to-white/10 rounded-2xl p-6 border border-white/10 backdrop-blur-sm">
+            <div className="bg-gradient-to-br from-[#2D5128] via-[#1a3015] to-[#2D5128] rounded-2xl p-6 border border-white/10 backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-red-500/20 rounded-xl flex items-center justify-center">
                   <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -252,7 +252,7 @@ export default function ManageUsersPage() {
           </div>
 
           {/* Search and Filter */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4 mb-6 ">
             <div className="relative flex-1">
               <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -260,13 +260,13 @@ export default function ManageUsersPage() {
               <input
                 type="text"
                 placeholder="Search users by name or email..."
-                className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 backdrop-blur-sm transition-all duration-300"
+                className="w-full pl-12 pr-4 py-3  bg-gradient-to-br from-[#2D5128] via-[#1a3015] to-[#2D5128] rounded-2xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 backdrop-blur-sm transition-all duration-300"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <select
-              className="px-4 py-3 bg-white/10 border border-white/20 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 backdrop-blur-sm transition-all duration-300"
+              className="px-4 py-3 bg-gradient-to-br from-[#2D5128] via-[#1a3015] to-[#2D5128] border  rounded-2xl text-black focus:outline-none focus:ring-2 focus:ring-blue-500/50 backdrop-blur-sm transition-all duration-300"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
             >
@@ -279,7 +279,7 @@ export default function ManageUsersPage() {
         </div>
 
         {/* Users Table */}
-        <div className="bg-white/5 rounded-3xl border border-white/10 backdrop-blur-xl overflow-hidden shadow-2xl">
+        <div className="bg-gradient-to-br from-[#2D5128] via-[#1a3015] to-[#2D5128] rounded-3xl border border-white/10 backdrop-blur-xl overflow-hidden shadow-2xl">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -304,7 +304,7 @@ export default function ManageUsersPage() {
                           {user.name?.charAt(0)?.toUpperCase() || 'U'}
                         </div>
                         <div>
-                          <p className="font-bold text-white text-lg">{user.email}</p>
+                          <p className="font-bold text-white text-lg">{user.name}</p>
                           <p className="text-slate-400 text-sm">{}</p>
                         </div>
                       </div>

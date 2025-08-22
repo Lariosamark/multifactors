@@ -48,7 +48,7 @@ export default function AdminDashboard() {
         setTotalQuotations(quotationsSnapshot.size);
 
         const pendingQuery = query(
-          collection(db, 'quotations'),
+          collection(db, 'users'),
           where('status', '==', 'pending')
         );
         const pendingSnapshot = await getDocs(pendingQuery);
