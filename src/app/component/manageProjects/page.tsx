@@ -45,16 +45,17 @@ export default function NavigationButtons() {
           limit(10)
         );
         const projectsSnapshot = await getDocs(projectsQuery);
-        
+
         projectsSnapshot.forEach((doc) => {
           const data = doc.data();
           allData.push({
             id: doc.id,
-            referenceNumber: data.referenceNumber || data.refNo|| doc.id,
+            referenceNumber: data.referenceNumber || data.refNo || doc.id,
             customerName: data.clientName || data.client || 'N/A',
             projectName: data.projectName || data.title || data.name || 'Untitled Project',
             projectType: 'Project',
-            remarks: data.status || data.remarks || 'Active',
+            // merge status + adminStatus
+            remarks: `${data.adminStatus ? `  ${data.adminStatus}` : ''}`,
             createdAt: data.createdAt
           });
         });
@@ -66,7 +67,7 @@ export default function NavigationButtons() {
           limit(10)
         );
         const quotationsSnapshot = await getDocs(quotationsQuery);
-        
+
         quotationsSnapshot.forEach((doc) => {
           const data = doc.data();
           allData.push({
@@ -75,7 +76,8 @@ export default function NavigationButtons() {
             customerName: data.clientName || data.name || 'N/A',
             projectName: data.subject || data.description || data.title || 'Quotation Request',
             projectType: 'Quotation',
-            remarks: data.status || data.remarks || 'Pending',
+            // merge status + remarks
+            remarks: `${data.status || 'Pending'}${data.remarks ? ` - ${data.remarks}` : ''}`,
             createdAt: data.createdAt
           });
         });
@@ -87,10 +89,9 @@ export default function NavigationButtons() {
           limit(5)
         );
         const customersSnapshot = await getDocs(customersQuery);
-        
+
         customersSnapshot.forEach((doc) => {
           const data = doc.data();
-          // Only add if they have recent projects/orders
           if (data.lastProject || data.lastOrder) {
             allData.push({
               id: doc.id,
@@ -98,7 +99,8 @@ export default function NavigationButtons() {
               supplier: data.clientName || data.supplier || 'Unknown Customer',
               total: data.lastProject || data.total || 'Customer Record',
               projectType: 'Project Order',
-              remarks: data.status || 'Active',
+              // merge status + remarks
+              remarks: `${data.status || 'Active'}${data.remarks ? ` - ${data.remarks}` : ''}`,
               createdAt: data.createdAt
             });
           }
@@ -116,7 +118,6 @@ export default function NavigationButtons() {
       } catch (err) {
         console.error('Error fetching data:', err);
         setError('Failed to load data. Please check your Firebase configuration.');
-        // Fallback to sample data
         setTableData([
           {
             id: 'sample-1',
@@ -164,6 +165,7 @@ export default function NavigationButtons() {
         return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4">
